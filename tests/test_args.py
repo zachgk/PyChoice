@@ -8,3 +8,4 @@ def echo(f):
 
 def test_foo():
     assert echo("foo") == "foo"
+    assert "echo" in choice.registry

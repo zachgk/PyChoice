@@ -3,6 +3,8 @@ from typing import Any, Callable, TypeVar, cast
 
 F = TypeVar("F", bound=Callable[..., Any])
 
+registry: dict[str, bool] = {}
+
 
 def args() -> Callable[[F], F]:
     """Allows providing choice arguments.
@@ -17,6 +19,10 @@ def args() -> Callable[[F], F]:
     """
 
     def decorator_args(func: F) -> F:
+        # Add to registry
+        registry[func.__name__] = True
+
+        # Return wrapper
         @functools.wraps(func)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
             return func(*args, **kwargs)

@@ -1,3 +1,3 @@
-from .args import args
+from .args import args, registry
 
-__all__ = ["args"]
+__all__ = ["args", "registry"]
