@@ -1,1 +1,1 @@
-::: pychoice.foo
+::: pychoice.args
