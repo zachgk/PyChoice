@@ -10,10 +10,12 @@ F = TypeVar("F", bound=Callable[..., Any])
 class ArgRegistry:
     def __init__(self, defaults: dict[str, Any]):
         self.defaults = defaults
-        self.rules: list[tuple[str, dict[str, Any]]] = []
+        self.rule_selectors: list[str] = []
+        self.rule_vals: list[dict[str, Any]] = []
 
     def add_rule(self, selector: str, vals: dict[str, Any]) -> None:
-        self.rules.append((selector, vals))
+        self.rule_selectors.append(selector)
+        self.rule_vals.append(vals)
 
 
 registry: dict[str, ArgRegistry] = {}
@@ -61,15 +63,12 @@ def args(*choice_args: str) -> Callable[[F], F]:
         # Return wrapper
         @functools.wraps(func)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
-            if not reg.rules:
-                return func(*args, **kwargs)
+            for matches, rule_val in zip(selector_matches(reg.rule_selectors), reg.rule_vals):
+                if matches:
+                    kwargs.update(rule_val)
+                    return func(*args, **kwargs)
 
-            rule_selector, rule_val = reg.rules[0]
-
-            if not selector_matches(rule_selector):
-                return func(*args, **kwargs)
-
-            kwargs.update(rule_val)
+            # No matching rule
             return func(*args, **kwargs)
 
         return cast(F, wrapper)
