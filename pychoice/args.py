@@ -2,6 +2,8 @@ import functools
 import inspect
 from typing import Any, Callable, TypeVar, cast
 
+from .selector import selector_matches
+
 F = TypeVar("F", bound=Callable[..., Any])
 
 
@@ -53,11 +55,21 @@ def args(*choice_args: str) -> Callable[[F], F]:
                 raise MissingChoiceArg(func, choice_arg)
 
         # Add to registry
-        registry[func.__name__] = ArgRegistry(defaults)
+        reg = ArgRegistry(defaults)
+        registry[func.__name__] = reg
 
         # Return wrapper
         @functools.wraps(func)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
+            if not reg.rules:
+                return func(*args, **kwargs)
+
+            rule_selector, rule_val = reg.rules[0]
+
+            if not selector_matches(rule_selector):
+                return func(*args, **kwargs)
+
+            kwargs.update(rule_val)
             return func(*args, **kwargs)
 
         return cast(F, wrapper)
