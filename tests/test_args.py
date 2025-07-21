@@ -15,6 +15,13 @@ def test_greet():
     assert choice.registry["greet"].defaults["greeting"] == "Hello"
 
 
+choice.arg_rule("greet", "test_override", greeting="Greetings")
+
+
+def test_override():
+    assert len(choice.registry["greet"].rules) > 0
+
+
 def test_missing_choice_arg():
     with pytest.raises(choice.MissingChoiceArg):
 

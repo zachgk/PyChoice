@@ -1,3 +1,3 @@
-from .args import MissingChoiceArg, args, registry
+from .args import MissingChoiceArg, arg_rule, args, registry
 
-__all__ = ["MissingChoiceArg", "args", "registry"]
+__all__ = ["MissingChoiceArg", "arg_rule", "args", "registry"]
