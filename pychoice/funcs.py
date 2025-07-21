@@ -1,6 +1,5 @@
 import functools
-import inspect
-from typing import Any, Callable, TypeVar, Optional, cast
+from typing import Any, Callable, Optional, TypeVar, cast
 
 from .selector import selector_matches
 
