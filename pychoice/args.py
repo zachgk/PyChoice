@@ -4,7 +4,13 @@ from typing import Any, Callable, TypeVar, cast
 
 F = TypeVar("F", bound=Callable[..., Any])
 
-registry: dict[str, dict[str, Any]] = {}
+
+class ArgRegistry:
+    def __init__(self, defaults: dict[str, Any]):
+        self.defaults = defaults
+
+
+registry: dict[str, ArgRegistry] = {}
 
 
 class MissingChoiceArg(Exception):
@@ -39,7 +45,7 @@ def args(*choice_args: str) -> Callable[[F], F]:
                 raise MissingChoiceArg(func, choice_arg)
 
         # Add to registry
-        registry[func.__name__] = defaults
+        registry[func.__name__] = ArgRegistry(defaults)
 
         # Return wrapper
         @functools.wraps(func)

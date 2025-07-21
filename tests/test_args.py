@@ -11,8 +11,8 @@ def greet(name: str, greeting="Hello"):
 def test_greet():
     assert greet("me") == "Hello me"
     assert "greet" in choice.registry
-    assert "greeting" in choice.registry["greet"]
-    assert choice.registry["greet"]["greeting"] == "Hello"
+    assert "greeting" in choice.registry["greet"].defaults
+    assert choice.registry["greet"].defaults["greeting"] == "Hello"
 
 
 def test_missing_choice_arg():
