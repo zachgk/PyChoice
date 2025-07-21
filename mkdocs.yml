@@ -1,0 +1,52 @@
+site_name: PyChoice
+repo_url: https://github.com/zachgk/PyChoice
+site_url: https://zachgk.github.io/PyChoice
+site_description: A library for manging choices, options, and configurations across abstraction hierarchy
+site_author: Zach Kimberg
+edit_uri: edit/main/docs/
+repo_name: zachgk/PyChoice
+copyright: Maintained by <a href="https://zachgk.com">zachgk</a>.
+
+nav:
+  - Home: index.md
+  - Modules: modules.md
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: ["pychoice"]
+theme:
+  name: material
+  feature:
+    tabs: true
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: white
+      accent: deep orange
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: black
+      accent: deep orange
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  icon:
+    repo: fontawesome/brands/github
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/zachgk/PyChoice
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/PyChoice
+
+markdown_extensions:
+  - toc:
+      permalink: true
+  - pymdownx.arithmatex:
+      generic: true
