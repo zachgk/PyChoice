@@ -8,7 +8,11 @@ def greet(name: str, greeting="Hello"):
     return f"{greeting} {name}"
 
 
-def registry_entry():
+def wrap_greet(name: str):
+    return greet(name)
+
+
+def test_registry_entry():
     assert "greet" in choice.registry
 
 
@@ -32,6 +36,14 @@ def test_override2():
 
 
 choice.arg_rule([test_override2, greet], greeting="Greetings2")
+
+
+def test_override_override():
+    assert wrap_greet("me") == "Greetings me"
+
+
+# choice.arg_rule([wrap_greet, greet], greeting="Wrap")
+choice.arg_rule([test_override_override, wrap_greet, greet], greeting="Greetings")
 
 
 def test_missing_choice_arg():
