@@ -42,7 +42,7 @@ def test_override_override():
     assert wrap_greet("me") == "Greetings me"
 
 
-# choice.arg_rule([wrap_greet, greet], greeting="Wrap")
+choice.arg_rule([wrap_greet, greet], greeting="Wrap")
 choice.arg_rule([test_override_override, wrap_greet, greet], greeting="Greetings")
 
 

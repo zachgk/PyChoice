@@ -37,3 +37,15 @@ def test_baz():
 
 
 choice.func_rule([test_baz, foo], baz)
+
+
+def wrap_foo():
+    return foo()
+
+
+def test_override_override():
+    assert wrap_foo() == "baz"
+
+
+choice.func_rule([wrap_foo, foo], bar)
+choice.func_rule([test_override_override, wrap_foo, foo], baz)

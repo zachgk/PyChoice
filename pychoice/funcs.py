@@ -1,7 +1,7 @@
 import functools
 from typing import Any, Callable, TypeVar, cast
 
-from .selector import SEL, selector_matches
+from .selector import SEL, sort_selectors
 
 F = TypeVar("F", bound=Callable[..., Any])
 
@@ -21,9 +21,10 @@ class ChoiceFunction:
         self.rule_impls.append(impl)
 
     def __call__(self, *args: list[Any], **kwargs: dict[str, Any]) -> Any:
-        for matches, rule_impl in zip(selector_matches(self.rule_selectors), self.rule_impls):
-            if matches:
-                return rule_impl(*args, **kwargs)
+        # TODO Use a more performant max_selector rather than sort_selectors
+        selector_indices = sort_selectors(self.rule_selectors)
+        if selector_indices:
+            return self.rule_impls[selector_indices[-1]](*args, **kwargs)
 
         # No matching rule
         return self.interface(*args, **kwargs)

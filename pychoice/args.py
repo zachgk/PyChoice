@@ -2,7 +2,7 @@ import functools
 import inspect
 from typing import Any, Callable, TypeVar, cast
 
-from .selector import SEL, selector_matches
+from .selector import SEL, sort_selectors
 
 F = TypeVar("F", bound=Callable[..., Any])
 
@@ -19,13 +19,13 @@ class ChoiceArg:
         self.rule_vals.append(vals)
 
     def __call__(self, *args: list[Any], **kwargs: dict[str, Any]) -> Any:
-        for matches, rule_val in zip(selector_matches(self.rule_selectors), self.rule_vals):
-            if matches:
-                kwargs.update(rule_val)
-                return self.func(*args, **kwargs)
+        new_kwargs = {}
+        for i in sort_selectors(self.rule_selectors):
+            new_kwargs.update(self.rule_vals[i])
+        new_kwargs.update(kwargs)
 
         # No matching rule
-        return self.func(*args, **kwargs)
+        return self.func(*args, **new_kwargs)
 
 
 registry: dict[str, ChoiceArg] = {}
