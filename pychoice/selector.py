@@ -1,17 +1,22 @@
 import inspect
+from typing import Any, Callable
+
+SEL = list[Callable[..., Any]]
 
 
-def selector_matches(selectors: list[str]) -> list[bool]:
+def selector_matches(selectors: list[SEL]) -> list[bool]:
     if not selectors:
         return []
     res = []
     stack_info = inspect.stack()
     for selector in selectors:
+        selector_matches = False
         for frame_info in stack_info:
-            if frame_info.function == selector:
-                res.append(True)
+            # TODO Support multi-element selectors
+            if frame_info.frame.f_code == selector[0].__code__:
+                selector_matches = True
                 break
 
-        res.append(False)
+        res.append(selector_matches)
 
     return res

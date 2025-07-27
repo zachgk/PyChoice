@@ -2,23 +2,33 @@ import functools
 import inspect
 from typing import Any, Callable, TypeVar, cast
 
-from .selector import selector_matches
+from .selector import SEL, selector_matches
 
 F = TypeVar("F", bound=Callable[..., Any])
 
 
-class ArgRegistry:
-    def __init__(self, defaults: dict[str, Any]):
+class ChoiceArg:
+    def __init__(self, func: Callable[..., Any], defaults: dict[str, Any]):
+        self.func = func
         self.defaults = defaults
-        self.rule_selectors: list[str] = []
+        self.rule_selectors: list[SEL] = []
         self.rule_vals: list[dict[str, Any]] = []
 
-    def add_rule(self, selector: str, vals: dict[str, Any]) -> None:
+    def _add_rule(self, selector: SEL, vals: dict[str, Any]) -> None:
         self.rule_selectors.append(selector)
         self.rule_vals.append(vals)
 
+    def __call__(self, *args: list[Any], **kwargs: dict[str, Any]) -> Any:
+        for matches, rule_val in zip(selector_matches(self.rule_selectors), self.rule_vals):
+            if matches:
+                kwargs.update(rule_val)
+                return self.func(*args, **kwargs)
 
-registry: dict[str, ArgRegistry] = {}
+        # No matching rule
+        return self.func(*args, **kwargs)
+
+
+registry: dict[str, ChoiceArg] = {}
 
 
 class MissingChoiceArg(Exception):
@@ -27,8 +37,9 @@ class MissingChoiceArg(Exception):
         super().__init__(msg)
 
 
-def arg_rule(func: str, selector: str, **kwargs: dict[str, Any]) -> None:
-    registry[func].add_rule(selector, kwargs)
+def arg_rule(selector: SEL, **kwargs: dict[str, Any]) -> None:
+    choice_arg = cast(ChoiceArg, selector[-1])
+    choice_arg._add_rule(selector[:-1], kwargs)
 
 
 def args(*choice_args: str) -> Callable[[F], F]:
@@ -57,20 +68,10 @@ def args(*choice_args: str) -> Callable[[F], F]:
                 raise MissingChoiceArg(func, choice_arg)
 
         # Add to registry
-        reg = ArgRegistry(defaults)
+        reg = ChoiceArg(func, defaults)
         registry[func.__name__] = reg
 
         # Return wrapper
-        @functools.wraps(func)
-        def wrapper(*args: Any, **kwargs: Any) -> Any:
-            for matches, rule_val in zip(selector_matches(reg.rule_selectors), reg.rule_vals):
-                if matches:
-                    kwargs.update(rule_val)
-                    return func(*args, **kwargs)
-
-            # No matching rule
-            return func(*args, **kwargs)
-
-        return cast(F, wrapper)
+        return cast(F, functools.wraps(func)(reg))
 
     return decorator_args
