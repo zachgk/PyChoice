@@ -45,13 +45,13 @@ def arg_rule(selector: SEL, **kwargs: dict[str, Any]) -> None:
 def args(*choice_args: str) -> Callable[[F], F]:
     """Allows providing choice arguments.
 
-    Extended description of function.
+    This function decorator lets you turn a function into one supporting choice arguments.
 
     Args:
-        bar: Description of input argument.
+        choice_args: The args from the decorated function to support as choice arguments
 
     Returns:
-        Description of return value
+        The function wrapped with choice argument support
     """
 
     def decorator_args(func: F) -> F:
