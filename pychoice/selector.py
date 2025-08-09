@@ -55,23 +55,22 @@ def selector_compare(a: SEL, b: SEL, stack_info: StackFrame) -> int:
     for frame_info in stack_info:
         a_matches = frame_info.frame.f_code == a[a_selector_index].__code__
         b_matches = frame_info.frame.f_code == b[b_selector_index].__code__
-        match (a_matches, b_matches):
-            case (False, False):
-                # Check next frame
-                continue
-            case (True, True):
-                a_selector_index = a_selector_index - 1
-                b_selector_index = b_selector_index - 1
-                if a_selector_index < 0 and b_selector_index < 0:
-                    return 0
-                elif a_selector_index < 0:
-                    return -1
-                elif b_selector_index < 0:
-                    return 1
-            case (False, True):
-                # b has lower level match, takes precedence
+        if not a_matches and not b_matches:
+            # Check next frame
+            continue
+        elif a_matches and b_matches:
+            a_selector_index = a_selector_index - 1
+            b_selector_index = b_selector_index - 1
+            if a_selector_index < 0 and b_selector_index < 0:
+                return 0
+            elif a_selector_index < 0:
                 return -1
-            case (True, False):
-                # a has lower level match, takes precedence
+            elif b_selector_index < 0:
                 return 1
+        elif not a_matches and b_matches:
+            # b has lower level match, takes precedence
+            return -1
+        elif a_matches and not b_matches:
+            # a has lower level match, takes precedence
+            return 1
     return 0
