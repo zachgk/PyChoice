@@ -49,3 +49,11 @@ def test_override_override():
 
 choice.rule([wrap_foo, foo], bar)
 choice.rule([test_override_override, wrap_foo, foo], baz)
+
+
+class TestClasses:
+    def test_class_override(self):
+        assert foo() == "bar"
+
+
+choice.rule([(TestClasses, "test_class_override"), foo], bar)

@@ -1,33 +1,64 @@
 from __future__ import annotations
 
 import inspect
+from enum import Enum
 from functools import cmp_to_key
 from typing import Any, Callable, Optional, Union
 
 SEL_I_CLS = tuple[type, str]
-SEL_I = Union[Callable[..., Any]]
+SEL_I = Union[Callable[..., Any], SEL_I_CLS]
 SEL = list[Callable[..., Any]]
 StackFrame = list[inspect.FrameInfo]
 OptStackFrame = Optional[StackFrame]
 
 
+class InvalidSelectorItem(TypeError):
+    def __init__(self, item: SEL_I):
+        msg = f"Invalid selector item type: {type(item)} for {item}"
+        super().__init__(msg)
+
+
 class SelectorItem:
-    def __init__(self, func: Callable[..., Any]) -> None:
-        self.func = func
+    class Kind(Enum):
+        FUNCTION = 1
+        CLASS = 2
+
+    def __init__(self, item: SEL_I) -> None:
+        if isinstance(item, tuple):
+            self.kind = self.Kind.CLASS
+            self.cls = item[0]
+            self.qual_name = f"{item[0].__name__}.{item[1]}"
+            self.func_name = item[1]
+        elif callable(item):
+            self.kind = self.Kind.FUNCTION
+            self.func = item
+        else:
+            raise InvalidSelectorItem(item)
 
     def __str__(self) -> str:
-        return self.func.__name__
+        if self.kind == self.Kind.FUNCTION:
+            return self.func.__name__
+        elif self.kind == self.Kind.CLASS:
+            return self.qual_name
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, SelectorItem):
             return False
-        return self.func == other.func
+        if other.kind != self.kind:
+            return False
+        if self.kind == self.Kind.FUNCTION:
+            return self.func == other.func
+        elif self.kind == self.Kind.CLASS:
+            return self.cls == other.cls and self.func_name == other.func_name
 
     def matches(self, frame_info: inspect.FrameInfo) -> bool:
         """
         Check if this selector item matches the current stack frame.
         """
-        return self.func.__code__ == frame_info.frame.f_code
+        if self.kind == self.Kind.FUNCTION:
+            return self.func.__code__ == frame_info.frame.f_code
+        elif self.kind == self.Kind.CLASS:
+            return self.qual_name == frame_info.frame.f_code.co_qualname
 
 
 class Selector:
