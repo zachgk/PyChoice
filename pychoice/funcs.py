@@ -1,22 +1,28 @@
 import functools
-from typing import Any, Callable, TypeVar, cast
+from typing import Any, Callable, Optional, TypeVar, Union, cast
 
+from .args import ChoiceFuncImplementation
 from .selector import SEL, sort_selectors
 
 F = TypeVar("F", bound=Callable[..., Any])
 
 
+class NonRule(Exception):
+    def __init__(self) -> None:
+        super().__init__("Expected a choice function for the rule impl")
+
+
 class ChoiceFunction:
-    def __init__(self, interface: Callable[..., Any]) -> None:
-        self.interface: Callable[..., Any] = interface
-        self.funcs: dict[str, Callable[..., Any]] = {}
+    def __init__(self, interface: ChoiceFuncImplementation) -> None:
+        self.interface: ChoiceFuncImplementation = interface
+        self.funcs: dict[str, ChoiceFuncImplementation] = {}
         self.rule_selectors: list[SEL] = []
-        self.rule_impls: list[Callable[..., Any]] = []
+        self.rule_impls: list[ChoiceFuncImplementation] = []
 
-    def _add_func(self, func: Callable[..., Any]) -> None:
-        self.funcs[func.__name__] = func
+    def _add_func(self, f: Callable[..., Any], func: ChoiceFuncImplementation) -> None:
+        self.funcs[f.__name__] = func
 
-    def _add_rule(self, selector: SEL, impl: Callable[..., Any]) -> None:
+    def _add_rule(self, selector: SEL, impl: ChoiceFuncImplementation) -> None:
         self.rule_selectors.append(selector)
         self.rule_impls.append(impl)
 
@@ -30,53 +36,44 @@ class ChoiceFunction:
         return self.interface(*args, **kwargs)
 
 
-func_registry: dict[str, ChoiceFunction] = {}
+registry: dict[str, ChoiceFunction] = {}
 
 
-def func_rule(selector: SEL, impl: Callable[..., Any]) -> None:
+def rule(selector: SEL, impl: Union[ChoiceFunction, ChoiceFuncImplementation], **kwargs: dict[str, Any]) -> None:
+    if isinstance(impl, ChoiceFunction):
+        impl = impl.interface
+    elif isinstance(impl, ChoiceFuncImplementation):
+        pass
+    else:
+        raise NonRule()
+    # Choose function implementation
     choice_fun = cast(ChoiceFunction, selector[-1])
     choice_fun._add_rule(selector[:-1], impl)
 
+    # Choose function arguments
+    impl._add_rule(selector[:-1], kwargs)
 
-def func_impl(interface: ChoiceFunction) -> Callable[[F], F]:
-    """Allows providing choice arguments.
 
-    Extended description of function.
-
-    Args:
-        bar: Description of input argument.
-
-    Returns:
-        Description of return value
-    """
+def func(implements: Optional[ChoiceFunction] = None, args: Optional[list[str]] = None) -> Callable[[F], F]:
+    if args is None:
+        args = []
 
     def decorator_args(func: F) -> F:
-        # Add to registry
-        interface._add_func(func)
+        func_args = ChoiceFuncImplementation(args, func)
+        if implements is None:
+            # Choice interface
 
-        return func
+            # Add to registry
+            reg = ChoiceFunction(func_args)
+            registry[func.__name__] = reg
 
-    return decorator_args
+            # Return wrapper
+            return cast(F, functools.wraps(func)(reg))
+        else:
+            # Choice implementation
 
-
-def func_interface() -> Callable[[F], F]:
-    """Allows providing choice arguments.
-
-    Extended description of function.
-
-    Args:
-        bar: Description of input argument.
-
-    Returns:
-        Description of return value
-    """
-
-    def decorator_args(func: F) -> F:
-        # Add to registry
-        reg = ChoiceFunction(func)
-        func_registry[func.__name__] = reg
-
-        # Return wrapper
-        return cast(F, functools.wraps(func)(reg))
+            # Add to registry
+            implements._add_func(func, func_args)
+            return cast(F, functools.wraps(func)(func_args))
 
     return decorator_args

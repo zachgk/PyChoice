@@ -7,77 +7,45 @@ The pychoice library is a python implementation of choice as described in this [
 
 ## Library
 
-### Choice Functions
-
-There are two basic types of choices, function choices and argument choices. For a function choice, you begin by creating the function interface:
+Let's say we have a simple greeting function that we will define as a choice function:
 
 ```python
-import pychoice as choice
-
-@choice.func_interface()
-def sort(l: list[int]) -> list[int]:
-    pass
-```
-
-Once you have the general interface, you can begin by adding implementations to it.
-
-```python
-@choice.func_impl(sort)
-def quicksort(l: list[int]) -> list[int]:
-    # Definition here
-
-
-@choice.func_impl(sort)
-def selection_sort(l: list[int]) -> list[int]:
-    # Definition here
-```
-
-Then, you can begin adding rules to define which implementation to use. These rules can be made to affect choices no matter how deep they are in the call stack. So it can also affect other functions, modules, or even libraries that you are using. The choice rules can define both precise rules for narrow situations or broad rules such as all usages of a library function throughout your code. Multiple conflicting rule are resolved in that the most precise rule takes precedence so it is easy to build them up.
-
-```python
-# Least precise rule to act as a default
-choice.func_rule([sort], quicksort)
-
-# Updates your user code foo and every indirect usage of sort to override with selection_sort
-choice.func_rule([foo, sort], selection_sort)
-
-# Another override of the foo override
-choice.func_rule([bar, foo, sort], selection_sort)
-```
-
-It is also possible to use this system for code injection. If you define a new implementation for an existing interface such as one provided by a library, this can inject your new implementation in.
-
-### Choice Arguments
-
-The second type is choice arguments which can modify the behavior of functions. Unlike the way standard arguments behave, a choice argument can be changed not just by the parent but by indirect parents. This means you no longer have to have a call stack daisy chain optional arguments down. Nor do you have to define configuration objects to store all of the arguments you want to daisy chain down. This is easy with choice arguments.
-
-You begin by defining the function to accept choice arguments and which arguments to make choices. These should be keyword arguments and have defaults even if the default is `None`:
-
-```python
-@choice.args("greeting")
+@choice.func(args=["greeting"])
 def greet(name: str, greeting="Hello"):
     return f"{greeting} {name}"
 ```
 
-Now, this greet function will allow customization of the greeting it gives. The default becomes "Hello". Then, you can define the choice rules for the arguments similarly to above:
+Now we might integrate this function into a larger application like an email broadcast to all subscribers. For example, we might have a call stack like `my_application() > ... > emailBroadCast() > writeEmail() > writeEmailBody() > greet()` where this greeting function is buried in a lot of other functions.
+
+But that means if you want to customize the greeting for your email broadcast, you would have two options. Either every single function in the chain would have to pass on a override greeting which makes them unreadable. Or you would define a dict or class to store an `EmailConfig` which contains the greeting. This works better, but rarely do these configs offer enough flexibility to work for all use cases.
+
+With a choice function, these can be controlled by using choice rules like this:
 
 ```python
-choice.arg_rule([renaissance, greet], greeting="Greetings and Salutations")
-choice.arg_rule([hip, greet], greeting="Yo")
+# Create a choice rule to override the behavior
+choice.rule([my_application, greet], greet, greeting="Hi")
+
+# Create another overriding rule
+choice.rule([my_application, serious_message, greet], greet, greeting="Dear Sir or Madam")
 ```
 
-### Combined
+Like this, you can add a collection of rules to determine which greeting you use. And these rules can control functions ignoring abstractinon boundries which should not apply to choices. This includes in other functions, modules, or libraries which can now systematically offer more control by using choice functions.
 
-The use of choice functions and choice arguments can also be combined:
+The rules help define situations where you want to use a particular choice. Some may be broad rules that affect may cases or others can be narrow and targeted to a specific usage. In the case that multiple conflicting rules affect the same situation, the most precise rule takes precedence.
+
+But let's say that the arguments which you (optionally) add to your choice function don't provide enough flexibility. Maybe you need a new format for the greeting. For this, you can define a full override.
+
+Think of the original signature like a function interface. Then you can have multiple implementations of the interface and use choice rules to control which implementation gets used. It would look like:
 
 ```python
-@choice.func_impl(sort)
-@choice.args("reversed")
-def insertion_sort(list[int], reversed=False) -> list[int]:
-    # Definition here
+@choice.func(implements=greet, args=["greeting", "title"])
+def greet_with_title(name: str, greeting="Hello", title="user"):
+    return f"{greeting} {name} the {title}"
 
-choice.rule([baz, sort], insertion_sort, reversed=True)
+choice.rule([my_application, happy_message, greet], greet_with_title, greeting="Hi", title="best user of my application in the whole wide world")
 ```
+
+Like this, the choice customization can behave like a systematic code injection system. Remember that it can also inject code into libraries, so it can act as a way for libraries to allow hooks or overrides.
 
 ## Status
 

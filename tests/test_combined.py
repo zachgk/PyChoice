@@ -3,13 +3,12 @@ import pychoice as choice
 # Define functions
 
 
-@choice.func_interface()
+@choice.func()
 def cfoo() -> str:
     return "foo"
 
 
-@choice.func_impl(cfoo)
-@choice.args("s")
+@choice.func(implements=cfoo, args=["s"])
 def cbar(s="bar") -> str:
     return s
 
@@ -21,7 +20,7 @@ def test_cbar():
     assert cfoo() == "bar"
 
 
-choice.func_rule([test_cbar, cfoo], cbar)
+choice.rule([test_cbar, cfoo], cbar)
 
 
 def test_cbaz():
