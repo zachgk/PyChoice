@@ -58,7 +58,17 @@ class SelectorItem:
         if self.kind == self.Kind.FUNCTION:
             return self.func.__code__ == frame_info.frame.f_code
         elif self.kind == self.Kind.CLASS:
-            return self.qual_name == frame_info.frame.f_code.co_qualname
+            if frame_info.frame.f_code.co_name == self.func_name:
+                qualname = frame_info.frame.f_code.co_qualname
+                parts = qualname.split(".")
+                if len(parts) > 1:
+                    class_name = parts[0]
+                    module = inspect.getmodule(frame_info.frame)
+                    cls = getattr(module, class_name, None)
+                    if not isinstance(cls, type):
+                        return False
+                    return cls == self.cls or issubclass(cls, self.cls)
+            return False
 
 
 class Selector:

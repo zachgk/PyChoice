@@ -57,3 +57,15 @@ class TestClasses:
 
 
 choice.rule([(TestClasses, "test_class_override"), foo], bar)
+
+
+class ParentClass:
+    pass
+
+
+class TestChildClass(ParentClass):
+    def test_child_class_override(self):
+        assert foo() == "bar"
+
+
+choice.rule([(ParentClass, "test_child_class_override"), foo], bar)
