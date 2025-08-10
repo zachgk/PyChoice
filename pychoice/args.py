@@ -3,13 +3,13 @@ from __future__ import annotations
 import inspect
 from typing import Any, Callable, NamedTuple, TypeVar
 
-from .selector import SEL
+from .selector import Selector
 
 F = TypeVar("F", bound=Callable[..., Any])
 
 
 class Rule(NamedTuple):
-    selector: SEL
+    selector: Selector
     impl: ChoiceFuncImplementation
     vals: dict[str, Any]
 

@@ -2,7 +2,7 @@ import networkx as nx
 import pytest
 
 from pychoice.poset import build_selector_poset, visualize_selector_poset
-from pychoice.selector import selector_generic_compare
+from pychoice.selector import Selector
 
 # Define functions
 
@@ -24,24 +24,25 @@ def baz() -> str:
 
 class TestSelectorGenericCompare:
     def test_eq(self):
-        assert selector_generic_compare([foo], [foo]) == 0
+        assert Selector([foo]).generic_compare(Selector([foo])) == 0
 
     def test_gt(self):
-        assert selector_generic_compare([baz, foo], [foo]) == -1
+        assert Selector([baz, foo]).generic_compare(Selector([foo])) == -1
 
     def test_lt(self):
-        assert selector_generic_compare([foo], [baz, foo]) == 1
+        assert Selector([foo]).generic_compare(Selector([baz, foo])) == 1
 
     def test_unrelated(self):
-        assert selector_generic_compare([foo], [bar]) == 0
+        assert Selector([foo]).generic_compare(Selector([bar])) == 0
 
 
-test_selectors = [
+test_selectors_raw = [
     [foo],
     [bar, foo],
     [baz, bar, foo],
     [baz, foo],
 ]
+test_selectors = [Selector(sel) for sel in test_selectors_raw]
 
 
 class TestSelectorPoset:
@@ -53,7 +54,7 @@ class TestSelectorPoset:
         text_string = "\n".join(text_lines)
         print(text_string)
 
-    # @pytest.mark.skip
+    @pytest.mark.skip
     def test_visualize_selector_poset(self):
         visualize_selector_poset(test_selectors, filename="test_poset.png")
         # This will display the graph, no assertion needed

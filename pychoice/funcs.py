@@ -4,7 +4,7 @@ from functools import cmp_to_key
 from typing import Any, Callable, Optional, TypeVar, Union, cast
 
 from .args import ChoiceFuncImplementation, Rule
-from .selector import SEL, selector_compare, selector_matches
+from .selector import SEL, Selector
 
 F = TypeVar("F", bound=Callable[..., Any])
 
@@ -24,7 +24,7 @@ class ChoiceFunction:
         self.funcs[f.__name__] = func
 
     def _add_rule(self, selector: SEL, impl: ChoiceFuncImplementation, vals: dict[str, Any]) -> None:
-        self.rules.append(Rule(selector, impl, vals))
+        self.rules.append(Rule(Selector(selector), impl, vals))
 
     def _sorted_selectors(self) -> list[Rule]:
         if not self.rules:
@@ -33,12 +33,12 @@ class ChoiceFunction:
         stack_info = inspect.stack()
 
         # Get indices and filter to only matching
-        rules = [r for r in rules if selector_matches(r.selector, stack_info)]
+        rules = [r for r in rules if r.selector.matches(stack_info)]
         if not rules:
             return []
 
         def compare(a: Rule, b: Rule) -> int:
-            return selector_compare(a.selector, b.selector, stack_info)
+            return a.selector.compare(b.selector, stack_info)
 
         # Sort
         rules = sorted(rules, key=cmp_to_key(compare))
