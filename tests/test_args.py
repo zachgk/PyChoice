@@ -28,7 +28,7 @@ choice.rule([test_override, greet], greet, greeting="Greetings")
 
 
 def test_override2():
-    assert greet.rule_selectors[1][0].__name__ == "test_override2"
+    assert greet.rules[1].selector[0].__name__ == "test_override2"
     assert greet("me") == "Greetings2 me"
 
 

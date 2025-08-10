@@ -1,9 +1,17 @@
-import inspect
-from typing import Any, Callable, TypeVar
+from __future__ import annotations
 
-from .selector import SEL, sort_selectors
+import inspect
+from typing import Any, Callable, NamedTuple, TypeVar
+
+from .selector import SEL
 
 F = TypeVar("F", bound=Callable[..., Any])
+
+
+class Rule(NamedTuple):
+    selector: SEL
+    impl: ChoiceFuncImplementation
+    vals: dict[str, Any]
 
 
 class MissingChoiceArg(Exception):
@@ -15,8 +23,6 @@ class MissingChoiceArg(Exception):
 class ChoiceFuncImplementation:
     def __init__(self, choice_args: list[str], func: F):
         self.func = func
-        self.rule_selectors: list[SEL] = []
-        self.rule_vals: list[dict[str, Any]] = []
 
         # Collect args
         sig = inspect.signature(func)
@@ -31,14 +37,10 @@ class ChoiceFuncImplementation:
                 raise MissingChoiceArg(func, choice_arg)
         self.defaults = defaults
 
-    def _add_rule(self, selector: SEL, vals: dict[str, Any]) -> None:
-        self.rule_selectors.append(selector)
-        self.rule_vals.append(vals)
-
-    def __call__(self, *args: list[Any], **kwargs: dict[str, Any]) -> Any:
+    def __call__(self, rules: list[Rule], args: tuple[Any, ...], kwargs: dict[str, Any]) -> Any:
         new_kwargs = {}
-        for i in sort_selectors(self.rule_selectors):
-            new_kwargs.update(self.rule_vals[i])
+        for r in rules:
+            new_kwargs.update(r.vals)
         new_kwargs.update(kwargs)
 
         # No matching rule

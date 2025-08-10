@@ -15,7 +15,7 @@ def sort_selectors(selectors: list[SEL]) -> list[int]:
     stack_info = inspect.stack()
 
     # Get indices and filter to only matching
-    indices = [i for i, matches in enumerate(selector_matches(selectors, stack_info)) if matches]
+    indices = [i for i, matches in enumerate(selectors_matches(selectors, stack_info)) if matches]
 
     def compare(a: int, b: int) -> int:
         return selector_compare(selectors[a], selectors[b], stack_info)
@@ -24,28 +24,27 @@ def sort_selectors(selectors: list[SEL]) -> list[int]:
     return sorted(indices, key=cmp_to_key(compare))
 
 
-def selector_matches(selectors: list[SEL], stack_info: OptStackFrame = None) -> list[bool]:
+def selectors_matches(selectors: list[SEL], stack_info: OptStackFrame = None) -> list[bool]:
     if not selectors:
         return []
-    res = []
     if stack_info is None:
         stack_info = inspect.stack()
-    for selector in selectors:
-        selector_matches = False
-        selector_index = len(selector) - 1
-        for frame_info in stack_info:
-            if frame_info.frame.f_code == selector[selector_index].__code__:
-                if selector_index == 0:
-                    # Finished matching selector
-                    selector_matches = True
-                    break
-                else:
-                    # More selector components
-                    selector_index = selector_index - 1
+    return [selector_matches(selector, stack_info) for selector in selectors]
 
-        res.append(selector_matches)
 
-    return res
+def selector_matches(selector: SEL, stack_info: OptStackFrame = None) -> bool:
+    if stack_info is None:
+        stack_info = inspect.stack()
+    selector_index = len(selector) - 1
+    for frame_info in stack_info:
+        if frame_info.frame.f_code == selector[selector_index].__code__:
+            if selector_index == 0:
+                # Finished matching selector
+                return True
+            else:
+                # More selector components
+                selector_index = selector_index - 1
+    return False
 
 
 # Expects selectors to be pre-filtered

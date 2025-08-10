@@ -1,8 +1,10 @@
 import functools
+import inspect
+from functools import cmp_to_key
 from typing import Any, Callable, Optional, TypeVar, Union, cast
 
-from .args import ChoiceFuncImplementation
-from .selector import SEL, sort_selectors
+from .args import ChoiceFuncImplementation, Rule
+from .selector import SEL, selector_compare, selector_matches
 
 F = TypeVar("F", bound=Callable[..., Any])
 
@@ -16,24 +18,42 @@ class ChoiceFunction:
     def __init__(self, interface: ChoiceFuncImplementation) -> None:
         self.interface: ChoiceFuncImplementation = interface
         self.funcs: dict[str, ChoiceFuncImplementation] = {}
-        self.rule_selectors: list[SEL] = []
-        self.rule_impls: list[ChoiceFuncImplementation] = []
+        self.rules: list[Rule] = []
 
     def _add_func(self, f: Callable[..., Any], func: ChoiceFuncImplementation) -> None:
         self.funcs[f.__name__] = func
 
-    def _add_rule(self, selector: SEL, impl: ChoiceFuncImplementation) -> None:
-        self.rule_selectors.append(selector)
-        self.rule_impls.append(impl)
+    def _add_rule(self, selector: SEL, impl: ChoiceFuncImplementation, vals: dict[str, Any]) -> None:
+        self.rules.append(Rule(selector, impl, vals))
 
-    def __call__(self, *args: list[Any], **kwargs: dict[str, Any]) -> Any:
-        # TODO Use a more performant max_selector rather than sort_selectors
-        selector_indices = sort_selectors(self.rule_selectors)
-        if selector_indices:
-            return self.rule_impls[selector_indices[-1]](*args, **kwargs)
+    def _sorted_selectors(self) -> list[Rule]:
+        if not self.rules:
+            return []
+        rules = self.rules
+        stack_info = inspect.stack()
 
-        # No matching rule
-        return self.interface(*args, **kwargs)
+        # Get indices and filter to only matching
+        rules = [r for r in rules if selector_matches(r.selector, stack_info)]
+        if not rules:
+            return []
+
+        def compare(a: Rule, b: Rule) -> int:
+            return selector_compare(a.selector, b.selector, stack_info)
+
+        # Sort
+        rules = sorted(rules, key=cmp_to_key(compare))
+
+        # Prune non-matching implementations for arg overrides
+        impl = rules[-1].impl
+        rules = [r for r in rules if r.impl == impl]
+
+        return rules
+
+    def __call__(self, *args: Any, **kwargs: Any) -> Any:
+        rules = self._sorted_selectors()
+        impl = rules[-1].impl if rules else self.interface
+
+        return impl(rules, args, kwargs)
 
 
 registry: dict[str, ChoiceFunction] = {}
@@ -48,10 +68,7 @@ def rule(selector: SEL, impl: Union[ChoiceFunction, ChoiceFuncImplementation], *
         raise NonRule()
     # Choose function implementation
     choice_fun = cast(ChoiceFunction, selector[-1])
-    choice_fun._add_rule(selector[:-1], impl)
-
-    # Choose function arguments
-    impl._add_rule(selector[:-1], kwargs)
+    choice_fun._add_rule(selector[:-1], impl, kwargs)
 
 
 def func(implements: Optional[ChoiceFunction] = None, args: Optional[list[str]] = None) -> Callable[[F], F]:
