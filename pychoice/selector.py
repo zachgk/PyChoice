@@ -73,3 +73,27 @@ def selector_compare(a: SEL, b: SEL, stack_info: StackFrame) -> int:
             # a has lower level match, takes precedence
             return 1
     return 0
+
+
+# Compare selectors in general, not a particular situation
+# Returns -1 if a is a sub-selector of b.
+# Returns 1 if b is a sub-selector of a.
+# Returns 0 if no relation
+def selector_generic_compare(a: SEL, b: SEL) -> int:
+    a_selector_index = len(a) - 1
+    b_selector_index = len(b) - 1
+    while a_selector_index >= 0 and b_selector_index >= 0:
+        if a[a_selector_index] == b[b_selector_index]:
+            a_selector_index = a_selector_index - 1
+            b_selector_index = b_selector_index - 1
+        else:
+            # Term mismatch. No sub_selector relation
+            return 0
+
+    if a_selector_index >= 0:
+        return -1
+    if b_selector_index >= 0:
+        return 1
+
+    # Selectors are equal
+    return 0
