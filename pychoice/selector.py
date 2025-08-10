@@ -2,8 +2,10 @@ from __future__ import annotations
 
 import inspect
 from functools import cmp_to_key
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Optional, Union
 
+SEL_I_CLS = tuple[type, str]
+SEL_I = Union[Callable[..., Any]]
 SEL = list[Callable[..., Any]]
 StackFrame = list[inspect.FrameInfo]
 OptStackFrame = Optional[StackFrame]
@@ -13,13 +15,27 @@ class SelectorItem:
     def __init__(self, func: Callable[..., Any]) -> None:
         self.func = func
 
+    def __str__(self) -> str:
+        return self.func.__name__
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, SelectorItem):
+            return False
+        return self.func == other.func
+
+    def matches(self, frame_info: inspect.FrameInfo) -> bool:
+        """
+        Check if this selector item matches the current stack frame.
+        """
+        return self.func.__code__ == frame_info.frame.f_code
+
 
 class Selector:
     def __init__(self, items: SEL) -> None:
-        self.items = items
+        self.items: list[SelectorItem] = [SelectorItem(i) for i in items]
 
     def __str__(self) -> str:
-        return f"Selector({', '.join(f.__name__ for f in self.items)})"
+        return f"Selector({', '.join(str(i) for i in self.items)})"
 
     # Returns the indices of selectors in sorted order with worst matching at 0 and best matching at -1.
     # Non-matching are not returned
@@ -51,7 +67,7 @@ class Selector:
             stack_info = inspect.stack()
         selector_index = len(self.items) - 1
         for frame_info in stack_info:
-            if frame_info.frame.f_code == self.items[selector_index].__code__:
+            if self.items[selector_index].matches(frame_info):
                 if selector_index == 0:
                     # Finished matching selector
                     return True
@@ -67,8 +83,8 @@ class Selector:
         a_selector_index = len(a) - 1
         b_selector_index = len(b) - 1
         for frame_info in stack_info:
-            a_matches = frame_info.frame.f_code == a[a_selector_index].__code__
-            b_matches = frame_info.frame.f_code == b[b_selector_index].__code__
+            a_matches = a[a_selector_index].matches(frame_info)
+            b_matches = b[b_selector_index].matches(frame_info)
             if not a_matches and not b_matches:
                 # Check next frame
                 continue
