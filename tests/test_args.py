@@ -51,3 +51,12 @@ def test_missing_choice_arg():
             return f
 
         return echo
+
+
+def test_cap():
+    assert wrap_greet("me") == "Greetings me me"
+
+
+choice.cap_rule(
+    [test_cap, choice.Match(wrap_greet, ["name"]), greet], greet, lambda c: {"greeting": f"Greetings {c['name']}"}
+)

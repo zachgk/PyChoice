@@ -1,4 +1,5 @@
 from .args import MissingChoiceArg
-from .funcs import func, registry, rule
+from .funcs import cap_rule, func, registry, rule
+from .selector import Match
 
-__all__ = ["MissingChoiceArg", "func", "registry", "rule"]
+__all__ = ["Match", "MissingChoiceArg", "cap_rule", "func", "registry", "rule"]

@@ -6,12 +6,19 @@ from typing import Any, Callable, NamedTuple, TypeVar
 from .selector import Selector
 
 F = TypeVar("F", bound=Callable[..., Any])
+type RuleVals = Callable[[dict[str, Any]], dict[str, Any]]
 
 
 class Rule(NamedTuple):
     selector: Selector
     impl: ChoiceFuncImplementation
-    vals: dict[str, Any]
+    vals: RuleVals
+
+
+class MatchedRule:
+    def __init__(self, rule: Rule, captures: dict[str, Any]) -> None:
+        self.rule = rule
+        self.captures = captures
 
 
 class MissingChoiceArg(Exception):
@@ -37,10 +44,10 @@ class ChoiceFuncImplementation:
                 raise MissingChoiceArg(func, choice_arg)
         self.defaults = defaults
 
-    def __call__(self, rules: list[Rule], args: tuple[Any, ...], kwargs: dict[str, Any]) -> Any:
+    def __call__(self, rules: list[MatchedRule], args: tuple[Any, ...], kwargs: dict[str, Any]) -> Any:
         new_kwargs = {}
         for r in rules:
-            new_kwargs.update(r.vals)
+            new_kwargs.update(r.rule.vals(r.captures))
         new_kwargs.update(kwargs)
 
         # No matching rule

@@ -3,7 +3,7 @@ import inspect
 from functools import cmp_to_key
 from typing import Any, Callable, Optional, TypeVar, Union, cast
 
-from .args import ChoiceFuncImplementation, Rule
+from .args import ChoiceFuncImplementation, MatchedRule, Rule, RuleVals
 from .selector import SEL, Selector
 
 F = TypeVar("F", bound=Callable[..., Any])
@@ -23,35 +23,38 @@ class ChoiceFunction:
     def _add_func(self, f: Callable[..., Any], func: ChoiceFuncImplementation) -> None:
         self.funcs[f.__name__] = func
 
-    def _add_rule(self, selector: SEL, impl: ChoiceFuncImplementation, vals: dict[str, Any]) -> None:
+    def _add_rule(self, selector: SEL, impl: ChoiceFuncImplementation, vals: RuleVals) -> None:
         self.rules.append(Rule(Selector(selector), impl, vals))
 
-    def _sorted_selectors(self) -> list[Rule]:
+    def _sorted_selectors(self) -> list[MatchedRule]:
         if not self.rules:
             return []
-        rules = self.rules
         stack_info = inspect.stack()
 
         # Get indices and filter to only matching
-        rules = [r for r in rules if r.selector.matches(stack_info)]
+        rules = []
+        for r in self.rules:
+            matches, capture = r.selector.matches(stack_info)
+            if matches:
+                rules.append(MatchedRule(r, capture))
         if not rules:
             return []
 
-        def compare(a: Rule, b: Rule) -> int:
-            return a.selector.compare(b.selector, stack_info)
+        def compare(a: MatchedRule, b: MatchedRule) -> int:
+            return a.rule.selector.compare(b.rule.selector, stack_info)
 
         # Sort
         rules = sorted(rules, key=cmp_to_key(compare))
 
         # Prune non-matching implementations for arg overrides
-        impl = rules[-1].impl
-        rules = [r for r in rules if r.impl == impl]
+        impl = rules[-1].rule.impl
+        rules = [r for r in rules if r.rule.impl == impl]
 
         return rules
 
     def __call__(self, *args: Any, **kwargs: Any) -> Any:
         rules = self._sorted_selectors()
-        impl = rules[-1].impl if rules else self.interface
+        impl = rules[-1].rule.impl if rules else self.interface
 
         return impl(rules, args, kwargs)
 
@@ -68,7 +71,19 @@ def rule(selector: SEL, impl: Union[ChoiceFunction, ChoiceFuncImplementation], *
         raise NonRule()
     # Choose function implementation
     choice_fun = cast(ChoiceFunction, selector[-1])
-    choice_fun._add_rule(selector[:-1], impl, kwargs)
+    choice_fun._add_rule(selector[:-1], impl, lambda _: kwargs)
+
+
+def cap_rule(selector: SEL, impl: Union[ChoiceFunction, ChoiceFuncImplementation], vals: RuleVals) -> None:
+    if isinstance(impl, ChoiceFunction):
+        impl = impl.interface
+    elif isinstance(impl, ChoiceFuncImplementation):
+        pass
+    else:
+        raise NonRule()
+    # Choose function implementation
+    choice_fun = cast(ChoiceFunction, selector[-1])
+    choice_fun._add_rule(selector[:-1], impl, vals)
 
 
 def func(implements: Optional[ChoiceFunction] = None, args: Optional[list[str]] = None) -> Callable[[F], F]:

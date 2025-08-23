@@ -1,9 +1,8 @@
 from __future__ import annotations
 
 import inspect
-from enum import Enum
 from functools import cmp_to_key
-from typing import Any, Callable, Optional, Union
+from typing import Any, Callable, NamedTuple, Optional, Union
 
 SEL_I_CLS = tuple[type, str]
 SEL_I = Union[Callable[..., Any], SEL_I_CLS]
@@ -18,62 +17,101 @@ class InvalidSelectorItem(TypeError):
         super().__init__(msg)
 
 
-class SelectorItem:
-    class Kind(Enum):
-        FUNCTION = 1
-        CLASS = 2
+class Match(NamedTuple):
+    func: Callable[..., Any]
+    args: list[str]
 
-    def __init__(self, item: SEL_I) -> None:
-        if isinstance(item, tuple):
-            self.kind = self.Kind.CLASS
-            self.cls = item[0]
-            self.qual_name = f"{item[0].__name__}.{item[1]}"
-            self.func_name = item[1]
-        elif callable(item):
-            self.kind = self.Kind.FUNCTION
-            self.func = item
-        else:
-            raise InvalidSelectorItem(item)
+
+class SelectorItem:
+    def __init__(self) -> None:
+        pass
 
     def __str__(self) -> str:
-        if self.kind == self.Kind.FUNCTION:
-            return self.func.__name__
-        elif self.kind == self.Kind.CLASS:
-            return self.qual_name
+        raise NotImplementedError
 
     def __eq__(self, other: object) -> bool:
-        if not isinstance(other, SelectorItem):
-            return False
-        if other.kind != self.kind:
-            return False
-        if self.kind == self.Kind.FUNCTION:
-            return self.func == other.func
-        elif self.kind == self.Kind.CLASS:
-            return self.cls == other.cls and self.func_name == other.func_name
+        raise NotImplementedError
 
-    def matches(self, frame_info: inspect.FrameInfo) -> bool:
-        """
-        Check if this selector item matches the current stack frame.
-        """
-        if self.kind == self.Kind.FUNCTION:
-            return self.func.__code__ == frame_info.frame.f_code
-        elif self.kind == self.Kind.CLASS:
-            if frame_info.frame.f_code.co_name == self.func_name:
-                qualname = frame_info.frame.f_code.co_qualname
-                parts = qualname.split(".")
-                if len(parts) > 1:
-                    class_name = parts[0]
-                    module = inspect.getmodule(frame_info.frame)
-                    cls = getattr(module, class_name, None)
-                    if not isinstance(cls, type):
-                        return False
-                    return cls == self.cls or issubclass(cls, self.cls)
-            return False
+    def matches(self, frame_info: inspect.FrameInfo) -> tuple[bool, dict[str, Any]]:
+        raise NotImplementedError
+
+    def capture(self, frame_info: inspect.FrameInfo) -> dict[str, Any]:
+        return {}
+
+
+class FunctionSelectorItem(SelectorItem):
+    def __init__(self, func: Callable[..., Any]):
+        self.func = func
+
+    def __str__(self) -> str:
+        return self.func.__name__
+
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, FunctionSelectorItem) and self.func == other.func
+
+    def matches(self, frame_info: inspect.FrameInfo) -> tuple[bool, dict[str, Any]]:
+        return self.func.__code__ == frame_info.frame.f_code, {}
+
+
+class ClassSelectorItem(SelectorItem):
+    def __init__(self, cls: type, func_name: str):
+        self.cls = cls
+        self.qual_name = f"{cls.__name__}.{func_name}"
+        self.func_name = func_name
+
+    def __str__(self) -> str:
+        return self.qual_name
+
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, ClassSelectorItem) and self.cls == other.cls and self.func_name == other.func_name
+
+    def matches(self, frame_info: inspect.FrameInfo) -> tuple[bool, dict[str, Any]]:
+        if frame_info.frame.f_code.co_name == self.func_name:
+            qualname = frame_info.frame.f_code.co_qualname
+            parts = qualname.split(".")
+            if len(parts) > 1:
+                class_name = parts[0]
+                module = inspect.getmodule(frame_info.frame)
+                cls = getattr(module, class_name, None)
+                if not isinstance(cls, type):
+                    return False, {}
+                return cls == self.cls or issubclass(cls, self.cls), {}
+        return False, {}
+
+
+class MatchSelectorItem(SelectorItem):
+    def __init__(self, func: Callable[..., Any], match_args: list[str]):
+        self.func = func
+        self.match_args = match_args
+
+    def __str__(self) -> str:
+        return f"{self.func.__name__}({', '.join(self.match_args)})"
+
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, MatchSelectorItem) and self.func == other.func and self.match_args == other.match_args
+
+    def matches(self, frame_info: inspect.FrameInfo) -> tuple[bool, dict[str, Any]]:
+        if self.func.__code__ != frame_info.frame.f_code:
+            return False, {}
+        return True, self.capture(frame_info)
+
+    def capture(self, frame_info: inspect.FrameInfo) -> dict[str, Any]:
+        local_vars = frame_info.frame.f_locals
+        return {arg: local_vars[arg] for arg in self.match_args if arg in local_vars}
 
 
 class Selector:
     def __init__(self, items: SEL) -> None:
-        self.items: list[SelectorItem] = [SelectorItem(i) for i in items]
+        self.items: list[SelectorItem] = []
+        for i in items:
+            if isinstance(i, tuple) and len(i) == 2 and isinstance(i[0], type) and isinstance(i[1], str):
+                self.items.append(ClassSelectorItem(i[0], i[1]))
+            elif isinstance(i, Match):
+                self.items.append(MatchSelectorItem(i.func, i.args))
+            elif callable(i):
+                self.items.append(FunctionSelectorItem(i))
+            else:
+                raise InvalidSelectorItem(i)
 
     def __str__(self) -> str:
         return f"Selector({', '.join(str(i) for i in self.items)})"
@@ -101,21 +139,24 @@ class Selector:
             return []
         if stack_info is None:
             stack_info = inspect.stack()
-        return [selector.matches(stack_info) for selector in selectors]
+        return [selector.matches(stack_info)[0] for selector in selectors]
 
-    def matches(self, stack_info: OptStackFrame = None) -> bool:
+    def matches(self, stack_info: OptStackFrame = None) -> tuple[bool, dict[str, Any]]:
         if stack_info is None:
             stack_info = inspect.stack()
+        captures = {}
         selector_index = len(self.items) - 1
         for frame_info in stack_info:
-            if self.items[selector_index].matches(frame_info):
+            frame_matches, frame_captures = self.items[selector_index].matches(frame_info)
+            if frame_matches:
+                captures.update(frame_captures)
                 if selector_index == 0:
                     # Finished matching selector
-                    return True
+                    return True, captures
                 else:
                     # More selector components
                     selector_index = selector_index - 1
-        return False
+        return False, {}
 
     # Expects selectors to be pre-filtered
     def compare(self, other: Selector, stack_info: StackFrame) -> int:
