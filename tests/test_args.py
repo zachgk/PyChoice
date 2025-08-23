@@ -21,6 +21,8 @@ def test_greet():
     assert greet("me") == "Hello me"
     trace = choice.trace_stop()
     assert trace.count == 1
+    assert len(trace.items) == 1
+    assert len(trace.items[0].items) == 0
 
 
 def test_override():

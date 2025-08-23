@@ -1,13 +1,68 @@
+from __future__ import annotations
+
 import functools
 import inspect
 from functools import cmp_to_key
-from typing import Any, Callable, Optional, TypeVar, Union, cast
+from typing import Any, Callable, TypeVar, cast
 
 from .args import ChoiceFuncImplementation, MatchedRule, Rule, RuleVals
 from .selector import SEL, Selector
-from .trace import TraceStatus
 
 F = TypeVar("F", bound=Callable[..., Any])
+
+
+class TraceItem:
+    def __init__(self, func: ChoiceFunction) -> None:
+        self.func = func
+        self.items: list[TraceItem] = []
+
+
+class Tracing:
+    def __init__(self) -> None:
+        self.count = 0
+        self.items: list[TraceItem] = []
+        self.stack: list[TraceItem] = []
+
+    def begin(self, item: TraceItem) -> None:
+        self.count += 1
+        self.stack.append(item)
+
+    def end(self) -> None:
+        if not self.stack:
+            raise MismatchedTrace()
+        elif len(self.stack) == 1:
+            self.items.append(self.stack.pop())
+        else:
+            self.items[-1].items.append(self.stack.pop())
+
+
+class Trace:
+    def __init__(self, tracing: Tracing) -> None:
+        self.count = tracing.count
+        self.items = tracing.items
+        self.registry = registry
+
+
+class TraceStatus:
+    def __init__(self) -> None:
+        self.trace: Tracing | None = None
+
+    def call_begin(self, item: TraceItem) -> None:
+        if self.trace is not None:
+            self.trace.begin(item)
+
+    def call_end(self) -> None:
+        if self.trace is not None:
+            self.trace.end()
+
+    def start(self) -> None:
+        self.trace = Tracing()
+
+    def stop(self) -> Trace:
+        trace = self.trace if self.trace is not None else Tracing()
+        self.trace = None
+        return Trace(trace)
+
 
 trace_status = TraceStatus()
 
@@ -15,6 +70,11 @@ trace_status = TraceStatus()
 class NonRule(Exception):
     def __init__(self) -> None:
         super().__init__("Expected a choice function for the rule impl")
+
+
+class MismatchedTrace(RuntimeError):
+    def __init__(self) -> None:
+        super().__init__("Mismatched choice Trace end call")
 
 
 class ChoiceFunction:
@@ -59,7 +119,7 @@ class ChoiceFunction:
         rules = self._sorted_selectors()
         impl = rules[-1].rule.impl if rules else self.interface
 
-        trace_status.call_begin()
+        trace_status.call_begin(TraceItem(self))
         res = impl(rules, args, kwargs)
         trace_status.call_end()
         return res
@@ -68,7 +128,7 @@ class ChoiceFunction:
 registry: dict[str, ChoiceFunction] = {}
 
 
-def rule(selector: SEL, impl: Union[ChoiceFunction, ChoiceFuncImplementation], **kwargs: dict[str, Any]) -> None:
+def rule(selector: SEL, impl: ChoiceFunction | ChoiceFuncImplementation, **kwargs: dict[str, Any]) -> None:
     if isinstance(impl, ChoiceFunction):
         impl = impl.interface
     elif isinstance(impl, ChoiceFuncImplementation):
@@ -80,7 +140,7 @@ def rule(selector: SEL, impl: Union[ChoiceFunction, ChoiceFuncImplementation], *
     choice_fun._add_rule(selector[:-1], impl, lambda _: kwargs)
 
 
-def cap_rule(selector: SEL, impl: Union[ChoiceFunction, ChoiceFuncImplementation], vals: RuleVals) -> None:
+def cap_rule(selector: SEL, impl: ChoiceFunction | ChoiceFuncImplementation, vals: RuleVals) -> None:
     if isinstance(impl, ChoiceFunction):
         impl = impl.interface
     elif isinstance(impl, ChoiceFuncImplementation):
@@ -92,7 +152,7 @@ def cap_rule(selector: SEL, impl: Union[ChoiceFunction, ChoiceFuncImplementation
     choice_fun._add_rule(selector[:-1], impl, vals)
 
 
-def def_rule(selector: SEL, impl: Union[ChoiceFunction, ChoiceFuncImplementation]) -> Any:
+def def_rule(selector: SEL, impl: ChoiceFunction | ChoiceFuncImplementation) -> Any:
     if isinstance(impl, ChoiceFunction):
         impl = impl.interface
     elif isinstance(impl, ChoiceFuncImplementation):
@@ -109,7 +169,7 @@ def def_rule(selector: SEL, impl: Union[ChoiceFunction, ChoiceFuncImplementation
     return decorator_args
 
 
-def func(implements: Optional[ChoiceFunction] = None, args: Optional[list[str]] = None) -> Callable[[F], F]:
+def func(implements: ChoiceFunction | None = None, args: list[str] | None = None) -> Callable[[F], F]:
     if args is None:
         args = []
 
