@@ -1,0 +1,29 @@
+{
+  "items": [
+    {
+      "func": "greet",
+      "impl": "greet",
+      "rules": [],
+      "args": [
+        "me"
+      ],
+      "kwargs": {},
+      "choice_kwargs": {},
+      "items": []
+    }
+  ],
+  "registry": {
+    "greet": {
+      "interface": "greet",
+      "funcs": [],
+      "rules": [
+        "Selector(test_override)",
+        "Selector(test_override2)",
+        "Selector(wrap_greet)",
+        "Selector(test_override_override, wrap_greet)",
+        "Selector(test_cap, wrap_greet(name))",
+        "Selector(test_def_rule, wrap_greet(name))"
+      ]
+    }
+  }
+}
