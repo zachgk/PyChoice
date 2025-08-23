@@ -2,29 +2,71 @@ from __future__ import annotations
 
 import functools
 import inspect
+import io
+import json
 from functools import cmp_to_key
 from typing import Any, Callable, TypeVar, cast
 
 from .args import ChoiceFuncImplementation, MatchedRule, Rule, RuleVals
-from .selector import SEL, Selector
+from .selector import SEL, OptStackFrame, Selector
 
 F = TypeVar("F", bound=Callable[..., Any])
 
 
 class TraceItem:
-    def __init__(self, func: ChoiceFunction) -> None:
+    def __init__(
+        self,
+        func: ChoiceFunction,
+        impl: ChoiceFuncImplementation,
+        rules: list[MatchedRule],
+        stack_info: list[inspect.FrameInfo],
+        args: tuple[Any, ...],
+        kwargs: dict[str, Any],
+        choice_kwargs: dict[str, Any],
+    ) -> None:
         self.func = func
+        self.impl = impl
+        self.rules = rules
+        self.stack_info = stack_info
+        self.args = args
+        self.kwargs = kwargs
+        self.choice_kwargs = choice_kwargs
         self.items: list[TraceItem] = []
+
+    def print_item(self, sb: io.TextIOBase, indent: int = 0) -> None:
+        prefix = " " * indent
+        rule_str = " -> ".join(f"{r.rule.selector} [{r.rule.impl.func.__name__}]" for r in self.rules) or "No rules"
+        sb.write(f"{prefix}{self.func.interface.func.__name__} [{self.impl.func.__name__}]")
+        sb.write(f"{prefix}  Args: {self.args}, Kwargs: {self.kwargs}, Choice Kwargs: {self.choice_kwargs}")
+        sb.write(f"{prefix}  Rules: {rule_str}")
+        for sub_item in self.items:
+            sub_item.print_item(sb, indent + 2)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "func": getattr(self.func.interface.func, "__name__", str(self.func)),
+            "impl": getattr(self.impl.func, "__name__", str(self.impl)),
+            "rules": [
+                {
+                    "selector": str(r.rule.selector),
+                    "impl": getattr(r.rule.impl.func, "__name__", str(r.rule.impl)),
+                    "captures": r.captures,
+                }
+                for r in self.rules
+            ],
+            "args": self.args,
+            "kwargs": self.kwargs,
+            "choice_kwargs": self.choice_kwargs,
+            "items": [item.to_dict() for item in self.items],
+        }
 
 
 class Tracing:
     def __init__(self) -> None:
-        self.count = 0
         self.items: list[TraceItem] = []
         self.stack: list[TraceItem] = []
 
     def begin(self, item: TraceItem) -> None:
-        self.count += 1
         self.stack.append(item)
 
     def end(self) -> None:
@@ -38,9 +80,18 @@ class Tracing:
 
 class Trace:
     def __init__(self, tracing: Tracing) -> None:
-        self.count = tracing.count
         self.items = tracing.items
-        self.registry = registry
+
+    def __str__(self) -> str:
+        sb = io.StringIO()
+        for item in self.items:
+            item.print_item(sb, 0)
+
+        return sb.getvalue()
+
+    def save(self, filename: str) -> None:
+        with open(filename, "w") as f:
+            json.dump(self, f, cls=ChoiceJSONEncoder, indent=2)
 
 
 class TraceStatus:
@@ -89,10 +140,11 @@ class ChoiceFunction:
     def _add_rule(self, selector: SEL, impl: ChoiceFuncImplementation, vals: RuleVals) -> None:
         self.rules.append(Rule(Selector(selector), impl, vals))
 
-    def _sorted_selectors(self) -> list[MatchedRule]:
+    def _sorted_selectors(self, stack_info: OptStackFrame = None) -> list[MatchedRule]:
         if not self.rules:
             return []
-        stack_info = inspect.stack()
+        if stack_info is None:
+            stack_info = inspect.stack()
 
         # Get indices and filter to only matching
         rules = []
@@ -116,11 +168,13 @@ class ChoiceFunction:
         return rules
 
     def __call__(self, *args: Any, **kwargs: Any) -> Any:
-        rules = self._sorted_selectors()
+        stack_info = inspect.stack()
+        rules = self._sorted_selectors(stack_info)
         impl = rules[-1].rule.impl if rules else self.interface
 
-        trace_status.call_begin(TraceItem(self))
-        res = impl(rules, args, kwargs)
+        choice_kwargs = impl.choice_kwargs(rules, args, kwargs)
+        trace_status.call_begin(TraceItem(self, impl, rules, stack_info, args, kwargs, choice_kwargs))
+        res = impl.func(*args, **choice_kwargs)
         trace_status.call_end()
         return res
 
@@ -192,3 +246,18 @@ def func(implements: ChoiceFunction | None = None, args: list[str] | None = None
             return cast(F, functools.wraps(func)(func_args))
 
     return decorator_args
+
+
+class ChoiceJSONEncoder(json.JSONEncoder):
+    def default(self, obj: Any) -> Any:
+        if isinstance(obj, TraceItem):
+            return obj.to_dict()
+        elif isinstance(obj, Trace):
+            return {"items": [item.to_dict() for item in obj.items], "registry": registry}
+        elif isinstance(obj, ChoiceFunction):
+            return {
+                "interface": getattr(obj.interface.func, "__name__", str(obj.interface)),
+                "funcs": list(obj.funcs.keys()),
+                "rules": [str(r.selector) for r in obj.rules],
+            }
+        return super().default(obj)

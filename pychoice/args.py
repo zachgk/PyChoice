@@ -44,11 +44,12 @@ class ChoiceFuncImplementation:
                 raise MissingChoiceArg(func, choice_arg)
         self.defaults = defaults
 
-    def __call__(self, rules: list[MatchedRule], args: tuple[Any, ...], kwargs: dict[str, Any]) -> Any:
+    def choice_kwargs(self, rules: list[MatchedRule], args: tuple[Any, ...], kwargs: dict[str, Any]) -> dict[str, Any]:
         new_kwargs = {}
         for r in rules:
             new_kwargs.update(r.rule.vals(r.captures))
         new_kwargs.update(kwargs)
+        return new_kwargs
 
-        # No matching rule
-        return self.func(*args, **new_kwargs)
+    def __call__(self, rules: list[MatchedRule], args: tuple[Any, ...], kwargs: dict[str, Any]) -> Any:
+        return self.func(*args, **self.choice_kwargs(rules, args, kwargs))
