@@ -5,8 +5,11 @@ from typing import Any, Callable, Optional, TypeVar, Union, cast
 
 from .args import ChoiceFuncImplementation, MatchedRule, Rule, RuleVals
 from .selector import SEL, Selector
+from .trace import TraceStatus
 
 F = TypeVar("F", bound=Callable[..., Any])
+
+trace_status = TraceStatus()
 
 
 class NonRule(Exception):
@@ -56,7 +59,10 @@ class ChoiceFunction:
         rules = self._sorted_selectors()
         impl = rules[-1].rule.impl if rules else self.interface
 
-        return impl(rules, args, kwargs)
+        trace_status.call_begin()
+        res = impl(rules, args, kwargs)
+        trace_status.call_end()
+        return res
 
 
 registry: dict[str, ChoiceFunction] = {}
@@ -84,6 +90,23 @@ def cap_rule(selector: SEL, impl: Union[ChoiceFunction, ChoiceFuncImplementation
     # Choose function implementation
     choice_fun = cast(ChoiceFunction, selector[-1])
     choice_fun._add_rule(selector[:-1], impl, vals)
+
+
+def def_rule(selector: SEL, impl: Union[ChoiceFunction, ChoiceFuncImplementation]) -> Any:
+    if isinstance(impl, ChoiceFunction):
+        impl = impl.interface
+    elif isinstance(impl, ChoiceFuncImplementation):
+        pass
+    else:
+        raise NonRule()
+
+    def decorator_args(func: RuleVals) -> RuleVals:
+        # Choose function implementation
+        choice_fun = cast(ChoiceFunction, selector[-1])
+        choice_fun._add_rule(selector[:-1], impl, func)
+        return func
+
+    return decorator_args
 
 
 def func(implements: Optional[ChoiceFunction] = None, args: Optional[list[str]] = None) -> Callable[[F], F]:

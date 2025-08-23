@@ -17,7 +17,10 @@ def test_registry_entry():
 
 
 def test_greet():
+    choice.trace_start()
     assert greet("me") == "Hello me"
+    trace = choice.trace_stop()
+    assert trace.count == 1
 
 
 def test_override():
@@ -60,3 +63,12 @@ def test_cap():
 choice.cap_rule(
     [test_cap, choice.Match(wrap_greet, ["name"]), greet], greet, lambda c: {"greeting": f"Greetings {c['name']}"}
 )
+
+
+def test_def_rule():
+    assert wrap_greet("me") == "Greetings me me"
+
+
+@choice.def_rule([test_def_rule, choice.Match(wrap_greet, ["name"]), greet], greet)
+def rule_test_def_rule(captures):
+    return {"greeting": f"Greetings {captures['name']}"}
