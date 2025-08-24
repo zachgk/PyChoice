@@ -182,7 +182,7 @@ class ChoiceFunction:
 registry: dict[str, ChoiceFunction] = {}
 
 
-def rule(selector: SEL, impl: ChoiceFunction | ChoiceFuncImplementation, **kwargs: dict[str, Any]) -> None:
+def rule(selector: SEL, impl: ChoiceFunction | ChoiceFuncImplementation, **kwargs: Any) -> None:
     if isinstance(impl, ChoiceFunction):
         impl = impl.interface
     elif isinstance(impl, ChoiceFuncImplementation):
