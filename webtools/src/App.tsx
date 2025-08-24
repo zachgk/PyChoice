@@ -10,7 +10,7 @@ import {
 import type { TraceData, TraceItemData } from './components/data';
 import traceData from './assets/trace.json'
 import Registry from './components/registry'
-import TraceItem from './components/trace';
+import TraceItems from './components/trace';
 
 
 function App() {
@@ -18,9 +18,9 @@ function App() {
 
 
   const renderTraceItems = () => (
-    <VStack gap={4} align="stretch">
+    <Box>
       {data.items.length > 0 ? (
-        data.items.map((item: TraceItemData, index: number) => <TraceItem item={item} depth={0} key={index} />)
+        <TraceItems items={data.items} />
       ) : (
         <Box
           borderWidth="1px"
@@ -32,7 +32,7 @@ function App() {
           <Text color="gray.500">No trace items found.</Text>
         </Box>
       )}
-    </VStack>
+    </Box>
   )
 
 
