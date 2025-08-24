@@ -1,17 +1,42 @@
+interface ChoiceRule {
+  selector: string
+  impl: string
+  vals: string
+}
+
+interface MatchedRule {
+  rule: ChoiceRule
+  captures: Record<string, string>
+}
+
 interface TraceItemData {
   func: string
   impl: string
-  rules: any[]
+  rules: MatchedRule[]
+  stack_info: string[]
   args: string[]
-  kwargs: Record<string, any>
-  choice_kwargs: Record<string, any>
+  kwargs: Record<string, string>
+  choice_kwargs: Record<string, string>
   items: TraceItemData[]
 }
 
+interface ChoiceFuncImplementation {
+  id: string
+  func: string
+  defaults: Record<string, string>
+}
+
+interface ChoiceInterface {
+  id: string
+  func: string
+  defaults: Record<string, string>
+}
+
 interface RegistryEntry {
-  interface: string
-  funcs: string[]
-  rules: string[]
+  id: string
+  interface: ChoiceInterface
+  funcs: Record<string, ChoiceFuncImplementation>
+  rules: ChoiceRule[]
 }
 
 interface TraceData {

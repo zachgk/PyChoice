@@ -4,11 +4,11 @@ import functools
 import inspect
 import io
 import json
-from collections.abc import Generator
 from functools import cmp_to_key
 from typing import Any, Callable, TypeVar, cast
+from uuid import uuid5
 
-from .args import ChoiceFuncImplementation, MatchedRule, Rule, RuleVals
+from .args import UUID_NAMESPACE, ChoiceFuncImplementation, MatchedRule, Rule, RuleVals
 from .selector import SEL, OptStackFrame, Selector
 
 F = TypeVar("F", bound=Callable[..., Any])
@@ -45,19 +45,13 @@ class TraceItem:
 
     def to_dict(self) -> dict[str, Any]:
         return {
-            "func": getattr(self.func.interface.func, "__name__", str(self.func)),
-            "impl": getattr(self.impl.func, "__name__", str(self.impl)),
-            "rules": [
-                {
-                    "selector": str(r.rule.selector),
-                    "impl": getattr(r.rule.impl.func, "__name__", str(r.rule.impl)),
-                    "captures": r.captures,
-                }
-                for r in self.rules
-            ],
-            "args": self.args,
-            "kwargs": self.kwargs,
-            "choice_kwargs": self.choice_kwargs,
+            "func": str(self.func.id),
+            "impl": str(self.impl.id),
+            "rules": self.rules,
+            "stack_info": [f"{fi.function} at {fi.filename}:{fi.lineno}" for fi in self.stack_info],
+            "args": [str(a) for a in self.args],
+            "kwargs": {k: str(v) for k, v in self.kwargs.items()},
+            "choice_kwargs": {k: str(v) for k, v in self.choice_kwargs.items()},
             "items": [item.to_dict() for item in self.items],
         }
 
@@ -76,7 +70,8 @@ class Tracing:
         elif len(self.stack) == 1:
             self.items.append(self.stack.pop())
         else:
-            self.items[-1].items.append(self.stack.pop())
+            ended = self.stack.pop()
+            self.stack[-1].items.append(ended)
 
 
 class Trace:
@@ -131,6 +126,7 @@ class MismatchedTrace(RuntimeError):
 
 class ChoiceFunction:
     def __init__(self, interface: ChoiceFuncImplementation) -> None:
+        self.id = uuid5(UUID_NAMESPACE, f"{interface.func.__module__}.{interface.func.__name__}")
         self.interface: ChoiceFuncImplementation = interface
         self.funcs: dict[str, ChoiceFuncImplementation] = {}
         self.rules: list[Rule] = []
@@ -180,7 +176,7 @@ class ChoiceFunction:
         return res
 
 
-registry: dict[str, ChoiceFunction] = {}
+registry: list[ChoiceFunction] = []
 
 
 def rule(selector: SEL, impl: ChoiceFunction | ChoiceFuncImplementation, **kwargs: Any) -> None:
@@ -235,7 +231,7 @@ def func(implements: ChoiceFunction | None = None, args: list[str] | None = None
 
             # Add to registry
             reg = ChoiceFunction(func_args)
-            registry[func.__name__] = reg
+            registry.append(reg)
 
             # Return wrapper
             return cast(F, functools.wraps(func)(reg))
@@ -251,17 +247,36 @@ def func(implements: ChoiceFunction | None = None, args: list[str] | None = None
 
 class ChoiceJSONEncoder(json.JSONEncoder):
     def default(self, obj: Any) -> Any:
+        if isinstance(obj, TraceItem):
+            return obj.to_dict()
+        elif isinstance(obj, Trace):
+            return {"items": [item.to_dict() for item in obj.items], "registry": {str(f.id): f for f in registry}}
+        elif isinstance(obj, ChoiceFunction):
+            return {
+                "id": str(obj.id),
+                "interface": obj.interface,
+                "funcs": obj.funcs,
+                "rules": obj.rules,
+            }
+        elif isinstance(obj, ChoiceFuncImplementation):
+            return {
+                "id": str(obj.id),
+                "func": getattr(obj.func, "__name__", str(obj)),
+                "defaults": {k: str(v) for k, v in obj.defaults.items()},
+            }
+        elif isinstance(obj, Rule):
+            return {
+                "selector": str(obj.selector),
+                "impl": str(obj.impl.id),
+                "vals": obj.vals.__name__,
+            }
+        elif isinstance(obj, MatchedRule):
+            return {
+                "rule": obj.rule,
+                "captures": {k: str(v) for k, v in obj.captures.items()},
+                "vals": {k: str(v) for k, v in obj.vals.items()},
+            }
         try:
-            if isinstance(obj, TraceItem):
-                return obj.to_dict()
-            elif isinstance(obj, Trace):
-                return {"items": [item.to_dict() for item in obj.items], "registry": registry}
-            elif isinstance(obj, ChoiceFunction):
-                return {
-                    "interface": getattr(obj.interface.func, "__name__", str(obj.interface)),
-                    "funcs": list(obj.funcs.keys()),
-                    "rules": [str(r.selector) for r in obj.rules],
-                }
             return super().default(obj)
         except Exception:
             return type(obj).__name__

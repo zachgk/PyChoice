@@ -1,105 +1,255 @@
 {
   "items": [
     {
-      "func": "loss_function",
-      "impl": "CrossEntropyLoss",
+      "func": "554e5e2a-dae9-54f7-a922-ef9bc49b3568",
+      "impl": "b5bf22ed-966e-5d27-9840-d4d349feea56",
       "rules": [
         {
-          "selector": "Selector(main)",
-          "impl": "CrossEntropyLoss",
+          "rule": {
+            "selector": "Selector(main)",
+            "impl": "b5bf22ed-966e-5d27-9840-d4d349feea56",
+            "vals": "<lambda>"
+          },
           "captures": {}
         }
+      ],
+      "stack_info": [
+        "__call__ at /data/projects/PyChoice/pychoice/funcs.py:169",
+        "__init__ at /data/projects/dlchoice/dlchoice/module.py:12",
+        "main at /data/projects/dlchoice/dlchoice/image_classification.py:24",
+        "<module> at /data/projects/dlchoice/dlchoice/image_classification.py:35"
       ],
       "args": [],
       "kwargs": {},
       "choice_kwargs": {},
+      "items": []
+    },
+    {
+      "func": "94f53060-633e-5e29-8783-8dce0e0b1ae9",
+      "impl": "94f53060-633e-5e29-8783-8dce0e0b1ae9",
+      "rules": [],
+      "stack_info": [
+        "__call__ at /data/projects/PyChoice/pychoice/funcs.py:169",
+        "main at /data/projects/dlchoice/dlchoice/image_classification.py:26",
+        "<module> at /data/projects/dlchoice/dlchoice/image_classification.py:35"
+      ],
+      "args": [
+        "ChoiceModule(\n  (model): ResNet(\n    (conv1): Conv2d(3, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)\n    (bn1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)\n    (act1): ReLU(inplace=True)\n    (maxpool): MaxPool2d(kernel_size=3, stride=2, padding=1, dilation=1, ceil_mode=False)\n    (layer1): Sequential(\n      (0): BasicBlock(\n        (conv1): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)\n        (bn1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)\n        (drop_block): Identity()\n        (act1): ReLU(inplace=True)\n        (aa): Identity()\n        (conv2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)\n        (bn2): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)\n        (act2): ReLU(inplace=True)\n      )\n      (1): BasicBlock(\n        (conv1): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)\n        (bn1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)\n        (drop_block): Identity()\n        (act1): ReLU(inplace=True)\n        (aa): Identity()\n        (conv2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)\n        (bn2): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)\n        (act2): ReLU(inplace=True)\n      )\n      (2): BasicBlock(\n        (conv1): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)\n        (bn1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)\n        (drop_block): Identity()\n        (act1): ReLU(inplace=True)\n        (aa): Identity()\n        (conv2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)\n        (bn2): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)\n        (act2): ReLU(inplace=True)\n      )\n    )\n    (layer2): Sequential(\n      (0): BasicBlock(\n        (conv1): Conv2d(64, 128, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)\n        (bn1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)\n        (drop_block): Identity()\n        (act1): ReLU(inplace=True)\n        (aa): Identity()\n        (conv2): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)\n        (bn2): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)\n        (act2): ReLU(inplace=True)\n        (downsample): Sequential(\n          (0): Conv2d(64, 128, kernel_size=(1, 1), stride=(2, 2), bias=False)\n          (1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)\n        )\n      )\n      (1): BasicBlock(\n        (conv1): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)\n        (bn1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)\n        (drop_block): Identity()\n        (act1): ReLU(inplace=True)\n        (aa): Identity()\n        (conv2): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)\n        (bn2): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)\n        (act2): ReLU(inplace=True)\n      )\n      (2): BasicBlock(\n        (conv1): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)\n        (bn1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)\n        (drop_block): Identity()\n        (act1): ReLU(inplace=True)\n        (aa): Identity()\n        (conv2): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)\n        (bn2): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)\n        (act2): ReLU(inplace=True)\n      )\n      (3): BasicBlock(\n        (conv1): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)\n        (bn1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)\n        (drop_block): Identity()\n        (act1): ReLU(inplace=True)\n        (aa): Identity()\n        (conv2): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)\n        (bn2): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)\n        (act2): ReLU(inplace=True)\n      )\n    )\n    (layer3): Sequential(\n      (0): BasicBlock(\n        (conv1): Conv2d(128, 256, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)\n        (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)\n        (drop_block): Identity()\n        (act1): ReLU(inplace=True)\n        (aa): Identity()\n        (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)\n        (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)\n        (act2): ReLU(inplace=True)\n        (downsample): Sequential(\n          (0): Conv2d(128, 256, kernel_size=(1, 1), stride=(2, 2), bias=False)\n          (1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)\n        )\n      )\n      (1): BasicBlock(\n        (conv1): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)\n        (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)\n        (drop_block): Identity()\n        (act1): ReLU(inplace=True)\n        (aa): Identity()\n        (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)\n        (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)\n        (act2): ReLU(inplace=True)\n      )\n      (2): BasicBlock(\n        (conv1): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)\n        (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)\n        (drop_block): Identity()\n        (act1): ReLU(inplace=True)\n        (aa): Identity()\n        (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)\n        (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)\n        (act2): ReLU(inplace=True)\n      )\n      (3): BasicBlock(\n        (conv1): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)\n        (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)\n        (drop_block): Identity()\n        (act1): ReLU(inplace=True)\n        (aa): Identity()\n        (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)\n        (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)\n        (act2): ReLU(inplace=True)\n      )\n      (4): BasicBlock(\n        (conv1): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)\n        (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)\n        (drop_block): Identity()\n        (act1): ReLU(inplace=True)\n        (aa): Identity()\n        (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)\n        (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)\n        (act2): ReLU(inplace=True)\n      )\n      (5): BasicBlock(\n        (conv1): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)\n        (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)\n        (drop_block): Identity()\n        (act1): ReLU(inplace=True)\n        (aa): Identity()\n        (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)\n        (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)\n        (act2): ReLU(inplace=True)\n      )\n    )\n    (layer4): Sequential(\n      (0): BasicBlock(\n        (conv1): Conv2d(256, 512, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)\n        (bn1): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)\n        (drop_block): Identity()\n        (act1): ReLU(inplace=True)\n        (aa): Identity()\n        (conv2): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)\n        (bn2): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)\n        (act2): ReLU(inplace=True)\n        (downsample): Sequential(\n          (0): Conv2d(256, 512, kernel_size=(1, 1), stride=(2, 2), bias=False)\n          (1): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)\n        )\n      )\n      (1): BasicBlock(\n        (conv1): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)\n        (bn1): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)\n        (drop_block): Identity()\n        (act1): ReLU(inplace=True)\n        (aa): Identity()\n        (conv2): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)\n        (bn2): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)\n        (act2): ReLU(inplace=True)\n      )\n      (2): BasicBlock(\n        (conv1): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)\n        (bn1): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)\n        (drop_block): Identity()\n        (act1): ReLU(inplace=True)\n        (aa): Identity()\n        (conv2): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)\n        (bn2): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)\n        (act2): ReLU(inplace=True)\n      )\n    )\n    (global_pool): SelectAdaptivePool2d(pool_type=avg, flatten=Flatten(start_dim=1, end_dim=-1))\n    (fc): Linear(in_features=512, out_features=10, bias=True)\n  )\n  (loss_fn): CrossEntropyLoss()\n)",
+        "{Train dataloader: size=60000}\n{Validation dataloader: None}\n{Test dataloader: None}\n{Predict dataloader: None}"
+      ],
+      "kwargs": {},
+      "choice_kwargs": {},
       "items": [
         {
-          "func": "ChoiceTrainer",
-          "impl": "ChoiceTrainer",
+          "func": "1404ba02-c74f-5c0d-97f2-63c458a9f7b3",
+          "impl": "1404ba02-c74f-5c0d-97f2-63c458a9f7b3",
           "rules": [
             {
-              "selector": "Selector(main)",
-              "impl": "ChoiceTrainer",
+              "rule": {
+                "selector": "Selector(main)",
+                "impl": "1404ba02-c74f-5c0d-97f2-63c458a9f7b3",
+                "vals": "<lambda>"
+              },
               "captures": {}
             }
+          ],
+          "stack_info": [
+            "__call__ at /data/projects/PyChoice/pychoice/funcs.py:169",
+            "train at /data/projects/dlchoice/dlchoice/train.py:152",
+            "__call__ at /data/projects/PyChoice/pychoice/funcs.py:175",
+            "main at /data/projects/dlchoice/dlchoice/image_classification.py:26",
+            "<module> at /data/projects/dlchoice/dlchoice/image_classification.py:35"
           ],
           "args": [],
           "kwargs": {},
           "choice_kwargs": {
-            "max_steps": 10
+            "max_steps": "10"
           },
           "items": []
         },
         {
-          "func": "create_optimizer",
-          "impl": "AdamW",
+          "func": "6e5a2c2e-7ebc-5990-b9fc-d4cf889a79c0",
+          "impl": "e686c7dc-9940-52c6-b820-79ec6930339a",
           "rules": [
             {
-              "selector": "Selector()",
-              "impl": "AdamW",
+              "rule": {
+                "selector": "Selector()",
+                "impl": "e686c7dc-9940-52c6-b820-79ec6930339a",
+                "vals": "<lambda>"
+              },
               "captures": {}
             },
             {
-              "selector": "Selector(main)",
-              "impl": "AdamW",
+              "rule": {
+                "selector": "Selector(main)",
+                "impl": "e686c7dc-9940-52c6-b820-79ec6930339a",
+                "vals": "<lambda>"
+              },
               "captures": {}
             }
           ],
+          "stack_info": [
+            "__call__ at /data/projects/PyChoice/pychoice/funcs.py:169",
+            "configure_optimizers at /data/projects/dlchoice/dlchoice/module.py:22",
+            "_call_lightning_module_hook at /data/projects/dlchoice/.venv/lib/python3.13/site-packages/lightning/pytorch/trainer/call.py:177",
+            "_init_optimizers_and_lr_schedulers at /data/projects/dlchoice/.venv/lib/python3.13/site-packages/lightning/pytorch/core/optimizer.py:180",
+            "setup_optimizers at /data/projects/dlchoice/.venv/lib/python3.13/site-packages/lightning/pytorch/strategies/strategy.py:139",
+            "setup at /data/projects/dlchoice/.venv/lib/python3.13/site-packages/lightning/pytorch/strategies/strategy.py:159",
+            "_run at /data/projects/dlchoice/.venv/lib/python3.13/site-packages/lightning/pytorch/trainer/trainer.py:988",
+            "_fit_impl at /data/projects/dlchoice/.venv/lib/python3.13/site-packages/lightning/pytorch/trainer/trainer.py:599",
+            "_call_and_handle_interrupt at /data/projects/dlchoice/.venv/lib/python3.13/site-packages/lightning/pytorch/trainer/call.py:49",
+            "fit at /data/projects/dlchoice/.venv/lib/python3.13/site-packages/lightning/pytorch/trainer/trainer.py:561",
+            "train at /data/projects/dlchoice/dlchoice/train.py:153",
+            "__call__ at /data/projects/PyChoice/pychoice/funcs.py:175",
+            "main at /data/projects/dlchoice/dlchoice/image_classification.py:26",
+            "<module> at /data/projects/dlchoice/dlchoice/image_classification.py:35"
+          ],
           "args": [
-            "generator"
+            "<generator object Module.parameters at 0x7f0110316a40>"
           ],
           "kwargs": {},
           "choice_kwargs": {
-            "lr": 0.005
+            "lr": "0.005"
           },
           "items": []
         }
       ]
-    },
-    {
-      "func": "train",
-      "impl": "train",
-      "rules": [],
-      "args": [
-        "ChoiceModule",
-        "ChoiceDataModule"
-      ],
-      "kwargs": {},
-      "choice_kwargs": {},
-      "items": []
     }
   ],
   "registry": {
-    "loss_function": {
-      "interface": "loss_function",
-      "funcs": [
-        "CrossEntropyLoss"
-      ],
+    "554e5e2a-dae9-54f7-a922-ef9bc49b3568": {
+      "id": "554e5e2a-dae9-54f7-a922-ef9bc49b3568",
+      "interface": {
+        "id": "554e5e2a-dae9-54f7-a922-ef9bc49b3568",
+        "func": "loss_function",
+        "defaults": {}
+      },
+      "funcs": {
+        "CrossEntropyLoss": {
+          "id": "b5bf22ed-966e-5d27-9840-d4d349feea56",
+          "func": "CrossEntropyLoss",
+          "defaults": {
+            "weight": "None",
+            "size_average": "None",
+            "ignore_index": "-100",
+            "reduce": "None",
+            "reduction": "mean",
+            "label_smoothing": "0.0"
+          }
+        }
+      },
       "rules": [
-        "Selector(main)"
+        {
+          "selector": "Selector(main)",
+          "impl": "b5bf22ed-966e-5d27-9840-d4d349feea56",
+          "vals": "<lambda>"
+        }
       ]
     },
-    "create_optimizer": {
-      "interface": "create_optimizer",
-      "funcs": [
-        "AdamW"
-      ],
+    "6e5a2c2e-7ebc-5990-b9fc-d4cf889a79c0": {
+      "id": "6e5a2c2e-7ebc-5990-b9fc-d4cf889a79c0",
+      "interface": {
+        "id": "6e5a2c2e-7ebc-5990-b9fc-d4cf889a79c0",
+        "func": "create_optimizer",
+        "defaults": {
+          "parameters": "<class 'inspect._empty'>"
+        }
+      },
+      "funcs": {
+        "AdamW": {
+          "id": "e686c7dc-9940-52c6-b820-79ec6930339a",
+          "func": "AdamW",
+          "defaults": {
+            "params": "<class 'inspect._empty'>",
+            "lr": "0.001",
+            "betas": "(0.9, 0.999)",
+            "eps": "1e-08",
+            "weight_decay": "0.01",
+            "amsgrad": "False"
+          }
+        }
+      },
       "rules": [
-        "Selector()",
-        "Selector(main)"
+        {
+          "selector": "Selector()",
+          "impl": "e686c7dc-9940-52c6-b820-79ec6930339a",
+          "vals": "<lambda>"
+        },
+        {
+          "selector": "Selector(main)",
+          "impl": "e686c7dc-9940-52c6-b820-79ec6930339a",
+          "vals": "<lambda>"
+        }
       ]
     },
-    "ChoiceTrainer": {
-      "interface": "ChoiceTrainer",
-      "funcs": [],
+    "1404ba02-c74f-5c0d-97f2-63c458a9f7b3": {
+      "id": "1404ba02-c74f-5c0d-97f2-63c458a9f7b3",
+      "interface": {
+        "id": "1404ba02-c74f-5c0d-97f2-63c458a9f7b3",
+        "func": "ChoiceTrainer",
+        "defaults": {
+          "accelerator": "auto",
+          "strategy": "auto",
+          "devices": "auto",
+          "num_nodes": "1",
+          "precision": "None",
+          "logger": "None",
+          "callbacks": "None",
+          "fast_dev_run": "False",
+          "max_epochs": "None",
+          "min_epochs": "None",
+          "max_steps": "-1",
+          "min_steps": "None",
+          "max_time": "None",
+          "limit_train_batches": "None",
+          "limit_val_batches": "None",
+          "limit_test_batches": "None",
+          "limit_predict_batches": "None",
+          "overfit_batches": "0.0",
+          "val_check_interval": "None",
+          "check_val_every_n_epoch": "1",
+          "num_sanity_val_steps": "None",
+          "log_every_n_steps": "None",
+          "enable_checkpointing": "None",
+          "enable_progress_bar": "None",
+          "enable_model_summary": "None",
+          "accumulate_grad_batches": "1",
+          "gradient_clip_val": "None",
+          "gradient_clip_algorithm": "None",
+          "deterministic": "None",
+          "benchmark": "None",
+          "inference_mode": "True",
+          "use_distributed_sampler": "True",
+          "profiler": "None",
+          "detect_anomaly": "False",
+          "barebones": "False",
+          "plugins": "None",
+          "sync_batchnorm": "False",
+          "reload_dataloaders_every_n_epochs": "0",
+          "default_root_dir": "None",
+          "model_registry": "None"
+        }
+      },
+      "funcs": {},
       "rules": [
-        "Selector(main)"
+        {
+          "selector": "Selector(main)",
+          "impl": "1404ba02-c74f-5c0d-97f2-63c458a9f7b3",
+          "vals": "<lambda>"
+        }
       ]
     },
-    "train": {
-      "interface": "train",
-      "funcs": [],
+    "94f53060-633e-5e29-8783-8dce0e0b1ae9": {
+      "id": "94f53060-633e-5e29-8783-8dce0e0b1ae9",
+      "interface": {
+        "id": "94f53060-633e-5e29-8783-8dce0e0b1ae9",
+        "func": "train",
+        "defaults": {
+          "model": "<class 'inspect._empty'>",
+          "data": "<class 'inspect._empty'>"
+        }
+      },
+      "funcs": {},
       "rules": []
     }
   }

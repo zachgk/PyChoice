@@ -13,7 +13,7 @@ def wrap_greet(name: str):
 
 
 def test_registry_entry():
-    assert "greet" in choice.registry
+    assert "greet" in [f.interface.func.__name__ for f in choice.registry]
 
 
 def test_greet():

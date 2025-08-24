@@ -4,10 +4,9 @@ import {
   Container,
   Heading,
   Text,
-  VStack,
   Tabs
 } from '@chakra-ui/react'
-import type { TraceData, TraceItemData } from './components/data';
+import type { TraceData } from './components/data';
 import traceData from './assets/trace.json'
 import Registry from './components/registry'
 import TraceItems from './components/trace';
@@ -45,7 +44,7 @@ function App() {
           </Heading>
         </Container>
       </Box>
-      
+
       <Container maxW="container.xl" py={8}>
         <Tabs.Root defaultValue="traces" variant="enclosed">
           <Tabs.List>
@@ -56,11 +55,11 @@ function App() {
               <Text fontWeight="semibold">Registry</Text>
             </Tabs.Trigger>
           </Tabs.List>
-          
+
           <Tabs.Content value="traces" pt={6}>
             {renderTraceItems()}
           </Tabs.Content>
-          
+
           <Tabs.Content value="registry" pt={6}>
             <Registry registry={data.registry} />
           </Tabs.Content>

@@ -1,15 +1,20 @@
 from __future__ import annotations
 
 import inspect
-from typing import Any, Callable, NamedTuple, TypeVar
+from dataclasses import dataclass
+from typing import Any, Callable, TypeVar
+from uuid import UUID, uuid5
 
 from .selector import Selector
 
 F = TypeVar("F", bound=Callable[..., Any])
 type RuleVals = Callable[[dict[str, Any]], dict[str, Any]]
 
+UUID_NAMESPACE = UUID("e7221d32-4940-4c49-b0e3-5f03446226ab")
 
-class Rule(NamedTuple):
+
+@dataclass
+class Rule:
     selector: Selector
     impl: ChoiceFuncImplementation
     vals: RuleVals
@@ -19,6 +24,7 @@ class MatchedRule:
     def __init__(self, rule: Rule, captures: dict[str, Any]) -> None:
         self.rule = rule
         self.captures = captures
+        self.vals = rule.vals(captures)
 
 
 class MissingChoiceArg(Exception):
@@ -29,6 +35,7 @@ class MissingChoiceArg(Exception):
 
 class ChoiceFuncImplementation:
     def __init__(self, choice_args: list[str], func: F):
+        self.id = uuid5(UUID_NAMESPACE, f"{func.__module__}.{func.__name__}")
         self.func = func
 
         # Collect args
@@ -47,7 +54,7 @@ class ChoiceFuncImplementation:
     def choice_kwargs(self, rules: list[MatchedRule], args: tuple[Any, ...], kwargs: dict[str, Any]) -> dict[str, Any]:
         new_kwargs = {}
         for r in rules:
-            new_kwargs.update(r.rule.vals(r.captures))
+            new_kwargs.update(r.vals)
         new_kwargs.update(kwargs)
         return new_kwargs
 

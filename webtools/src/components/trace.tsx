@@ -52,14 +52,14 @@ function TraceDetails(props: { traceItem: TraceItemData | null }) {
             {traceItem.impl}
           </Code>
         </Box>
-        
+
         <Box w="100%">
           <Text fontWeight="semibold" mb={2}>Arguments:</Text>
           <Code p={2} display="block" bg="gray.50" borderRadius="md">
             [{traceItem.args.join(', ')}]
           </Code>
         </Box>
-        
+
         {traceItem.rules.length > 0 && (
           <Box w="100%">
             <Text fontWeight="semibold" mb={2}>Rules:</Text>
@@ -68,7 +68,7 @@ function TraceDetails(props: { traceItem: TraceItemData | null }) {
             </Code>
           </Box>
         )}
-        
+
         {Object.keys(traceItem.kwargs).length > 0 && (
           <Box w="100%">
             <Text fontWeight="semibold" mb={2}>Kwargs:</Text>
@@ -77,7 +77,7 @@ function TraceDetails(props: { traceItem: TraceItemData | null }) {
             </Code>
           </Box>
         )}
-        
+
         {Object.keys(traceItem.choice_kwargs).length > 0 && (
           <Box w="100%">
             <Text fontWeight="semibold" mb={2}>Choice Kwargs:</Text>
@@ -107,22 +107,22 @@ function TraceDetails(props: { traceItem: TraceItemData | null }) {
 function TraceItems(props: TraceItemsProps) {
     const { items } = props;
     const [selectedNode, setSelectedNode] = useState<TreeNode | null>(null);
-    
+
     const convertToTreeNodes = (traceItem: TraceItemData, currentDepth: number = 0, parentId: string = ''): TreeNode => {
       const nodeId = `${parentId}-${traceItem.func}-${currentDepth}`;
       return {
         id: nodeId,
         name: traceItem.func,
         data: traceItem,
-        children: traceItem.items.length > 0 
-          ? traceItem.items.map((child, index) => convertToTreeNodes(child, currentDepth + 1, nodeId))
+        children: traceItem.items.length > 0
+          ? traceItem.items.map((child) => convertToTreeNodes(child, currentDepth + 1, nodeId))
           : undefined
       };
     };
 
     // Convert all trace items to tree nodes
     const allTreeNodes = items.map((item, index) => convertToTreeNodes(item, 0, `root-${index}`));
-    
+
     const collection = createTreeCollection<TreeNode>({
       nodeToValue: (node) => node.id,
       nodeToString: (node) => node.name,
@@ -157,8 +157,8 @@ function TraceItems(props: TraceItemsProps) {
                             <LuChevronRight />
                           </TreeView.BranchIndicator>
                         </TreeView.BranchTrigger>
-                        <Text 
-                          fontWeight="medium" 
+                        <Text
+                          fontWeight="medium"
                           cursor="pointer"
                           _hover={{ color: "blue.600" }}
                           onClick={(e: any) => handleSelectionChange(node, e)}
@@ -173,7 +173,7 @@ function TraceItems(props: TraceItemsProps) {
                       </TreeView.BranchControl>
                     ) : (
                       <TreeView.Item>
-                        <Text 
+                        <Text
                           cursor="pointer"
                           onClick={(e: any) => handleSelectionChange(node, e)}
                           _hover={{ color: "blue.600" }}
@@ -188,7 +188,7 @@ function TraceItems(props: TraceItemsProps) {
             </TreeView.Root>
           </Box>
         </GridItem>
-        
+
         <GridItem>
           <Box borderWidth="1px" borderRadius="md" h="100%" overflow="auto">
             <Box p={3} borderBottom="1px" borderColor="gray.200" bg="gray.50">
@@ -199,6 +199,6 @@ function TraceItems(props: TraceItemsProps) {
         </GridItem>
       </Grid>
     );
-}  
+}
 
 export default TraceItems

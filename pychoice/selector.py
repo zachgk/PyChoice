@@ -114,7 +114,7 @@ class Selector:
                 raise InvalidSelectorItem(i)
 
     def __str__(self) -> str:
-        return f"Selector({', '.join(str(i) for i in self.items)})"
+        return " ".join(str(i) for i in self.items)
 
     # Returns the indices of selectors in sorted order with worst matching at 0 and best matching at -1.
     # Non-matching are not returned
