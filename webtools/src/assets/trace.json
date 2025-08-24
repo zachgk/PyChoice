@@ -1,11 +1,69 @@
 {
   "items": [
     {
-      "func": "greet",
-      "impl": "greet",
+      "func": "loss_function",
+      "impl": "CrossEntropyLoss",
+      "rules": [
+        {
+          "selector": "Selector(main)",
+          "impl": "CrossEntropyLoss",
+          "captures": {}
+        }
+      ],
+      "args": [],
+      "kwargs": {},
+      "choice_kwargs": {},
+      "items": [
+        {
+          "func": "ChoiceTrainer",
+          "impl": "ChoiceTrainer",
+          "rules": [
+            {
+              "selector": "Selector(main)",
+              "impl": "ChoiceTrainer",
+              "captures": {}
+            }
+          ],
+          "args": [],
+          "kwargs": {},
+          "choice_kwargs": {
+            "max_steps": 10
+          },
+          "items": []
+        },
+        {
+          "func": "create_optimizer",
+          "impl": "AdamW",
+          "rules": [
+            {
+              "selector": "Selector()",
+              "impl": "AdamW",
+              "captures": {}
+            },
+            {
+              "selector": "Selector(main)",
+              "impl": "AdamW",
+              "captures": {}
+            }
+          ],
+          "args": [
+            "generator"
+          ],
+          "kwargs": {},
+          "choice_kwargs": {
+            "lr": 0.005
+          },
+          "items": []
+        }
+      ]
+    },
+    {
+      "func": "train",
+      "impl": "train",
       "rules": [],
       "args": [
-        "me"
+        "ChoiceModule",
+        "ChoiceDataModule"
       ],
       "kwargs": {},
       "choice_kwargs": {},
@@ -13,17 +71,36 @@
     }
   ],
   "registry": {
-    "greet": {
-      "interface": "greet",
+    "loss_function": {
+      "interface": "loss_function",
+      "funcs": [
+        "CrossEntropyLoss"
+      ],
+      "rules": [
+        "Selector(main)"
+      ]
+    },
+    "create_optimizer": {
+      "interface": "create_optimizer",
+      "funcs": [
+        "AdamW"
+      ],
+      "rules": [
+        "Selector()",
+        "Selector(main)"
+      ]
+    },
+    "ChoiceTrainer": {
+      "interface": "ChoiceTrainer",
       "funcs": [],
       "rules": [
-        "Selector(test_override)",
-        "Selector(test_override2)",
-        "Selector(wrap_greet)",
-        "Selector(test_override_override, wrap_greet)",
-        "Selector(test_cap, wrap_greet(name))",
-        "Selector(test_def_rule, wrap_greet(name))"
+        "Selector(main)"
       ]
+    },
+    "train": {
+      "interface": "train",
+      "funcs": [],
+      "rules": []
     }
   }
 }
