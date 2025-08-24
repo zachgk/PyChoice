@@ -5,6 +5,8 @@ import {
   HStack,
   Badge,
   Code,
+  TreeView,
+  createTreeCollection
 } from '@chakra-ui/react'
 import type { TraceItemData } from './data';
 
@@ -13,67 +15,113 @@ interface TraceItemProps {
     depth: number;
 }
 
+interface TreeNode {
+  id: string;
+  name: string;
+  data: TraceItemData;
+  children?: TreeNode[];
+}
+
 function TraceItem(props: TraceItemProps) {
     const {item, depth} = props;
-    return (
-      <Box key={`${item.func}-${depth}`} ml={depth * 4} mb={4}>
-        <Box
-          borderWidth="1px"
-          borderRadius="md"
-          p={4}
-          bg="white"
-          shadow="sm"
-        >
-          <VStack align="start" gap={2}>
+    
+    const convertToTreeNodes = (traceItem: TraceItemData, currentDepth: number = 0): TreeNode => {
+      return {
+        id: `${traceItem.func}-${currentDepth}-${Date.now()}`,
+        name: traceItem.func,
+        data: traceItem,
+        children: traceItem.items.length > 0 
+          ? traceItem.items.map((child, index) => convertToTreeNodes(child, currentDepth + 1))
+          : undefined
+      };
+    };
+
+    const renderTraceDetails = (traceItem: TraceItemData) => (
+      <Box p={3} bg="gray.50" borderRadius="md" mt={2}>
+        <VStack align="start" gap={2}>
+          <HStack>
+            <Text fontWeight="semibold">Implementation:</Text>
+            <Code>{traceItem.impl}</Code>
+          </HStack>
+          
+          <HStack>
+            <Text fontWeight="semibold">Args:</Text>
+            <Code>[{traceItem.args.join(', ')}]</Code>
+          </HStack>
+          
+          {traceItem.rules.length > 0 && (
             <HStack>
-              <Badge colorScheme="blue">Function</Badge>
-              <Text fontWeight="bold">{item.func}</Text>
+              <Text fontWeight="semibold">Rules:</Text>
+              <Code>[{JSON.stringify(traceItem.rules)}]</Code>
             </HStack>
-            
+          )}
+          
+          {Object.keys(traceItem.kwargs).length > 0 && (
             <HStack>
-              <Text fontWeight="semibold">Implementation:</Text>
-              <Code>{item.impl}</Code>
+              <Text fontWeight="semibold">Kwargs:</Text>
+              <Code>{JSON.stringify(traceItem.kwargs)}</Code>
             </HStack>
-            
+          )}
+          
+          {Object.keys(traceItem.choice_kwargs).length > 0 && (
             <HStack>
-              <Text fontWeight="semibold">Args:</Text>
-              <Code>[{item.args.join(', ')}]</Code>
+              <Text fontWeight="semibold">Choice Kwargs:</Text>
+              <Code>{JSON.stringify(traceItem.choice_kwargs)}</Code>
             </HStack>
-            
-            {item.rules.length > 0 && (
-              <HStack>
-                <Text fontWeight="semibold">Rules:</Text>
-                <Code>[{JSON.stringify(item.rules)}]</Code>
-              </HStack>
-            )}
-            
-            {Object.keys(item.kwargs).length > 0 && (
-              <HStack>
-                <Text fontWeight="semibold">Kwargs:</Text>
-                <Code>{JSON.stringify(item.kwargs)}</Code>
-              </HStack>
-            )}
-            
-            {Object.keys(item.choice_kwargs).length > 0 && (
-              <HStack>
-                <Text fontWeight="semibold">Choice Kwargs:</Text>
-                <Code>{JSON.stringify(item.choice_kwargs)}</Code>
-              </HStack>
-            )}
-            
-            {item.items.length > 0 && (
-              <Box w="100%">
-                <Text fontWeight="semibold" mb={2}>Nested Items:</Text>
-                <VStack gap={2} align="stretch">
-                  {item.items.map((nestedItem: TraceItemData, index: number) => 
-                    <TraceItem item={nestedItem} depth={depth + 1} key={index} />
-                  )}
-                </VStack>
-              </Box>
-            )}
-          </VStack>
-        </Box>
+          )}
+        </VStack>
       </Box>
+    );
+
+    const treeNode = convertToTreeNodes(item, depth);
+    const collection = createTreeCollection<TreeNode>({
+      nodeToValue: (node) => node.id,
+      nodeToString: (node) => node.name,
+      rootNode: {
+        id: "ROOT",
+        name: "",
+        data: item,
+        children: [treeNode],
+      },
+    });
+
+    return (
+      <TreeView.Root collection={collection} defaultExpandedValue={[treeNode.id]} mb={4}>
+        <TreeView.Tree>
+          <TreeView.Node<TreeNode>
+            render={({ node, nodeState }) =>
+              nodeState.isBranch ? (
+                <TreeView.BranchControl>
+                  <HStack>
+                    <Badge colorScheme="blue" size="sm">Function</Badge>
+                    <Text fontWeight="bold">{node.name}</Text>
+                    {node.data && (
+                      <Text fontSize="sm" color="gray.600">({node.data.impl})</Text>
+                    )}
+                    {node.children && node.children.length > 0 && (
+                      <Badge colorScheme="gray" size="sm">
+                        {node.children.length} nested
+                      </Badge>
+                    )}
+                  </HStack>
+                  {node.data && renderTraceDetails(node.data)}
+                </TreeView.BranchControl>
+              ) : (
+                <TreeView.Item>
+                  <HStack>
+                    <Badge colorScheme="green" size="sm">Nested</Badge>
+                    <Text fontWeight="bold">{node.name}</Text>
+                    {node.data && (
+                      <Text fontSize="sm" color="gray.600">({node.data.impl})</Text>
+                    )}
+                  </HStack>
+                  {node.data && renderTraceDetails(node.data)}
+                </TreeView.Item>
+              )
+            }
+          />
+        </TreeView.Tree>
+      </TreeView.Root>
     );
 }  
 
