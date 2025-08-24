@@ -144,6 +144,8 @@ class Selector:
     def matches(self, stack_info: OptStackFrame = None) -> tuple[bool, dict[str, Any]]:
         if stack_info is None:
             stack_info = inspect.stack()
+        if len(self.items) == 0:
+            return True, {}
         captures = {}
         selector_index = len(self.items) - 1
         for frame_info in stack_info:
@@ -165,6 +167,12 @@ class Selector:
         a_selector_index = len(a) - 1
         b_selector_index = len(b) - 1
         for frame_info in stack_info:
+            if a_selector_index < 0 and b_selector_index < 0:
+                return 0
+            elif a_selector_index < 0:
+                return -1
+            elif b_selector_index < 0:
+                return 1
             a_matches = a[a_selector_index].matches(frame_info)
             b_matches = b[b_selector_index].matches(frame_info)
             if not a_matches and not b_matches:
@@ -173,12 +181,6 @@ class Selector:
             elif a_matches and b_matches:
                 a_selector_index = a_selector_index - 1
                 b_selector_index = b_selector_index - 1
-                if a_selector_index < 0 and b_selector_index < 0:
-                    return 0
-                elif a_selector_index < 0:
-                    return -1
-                elif b_selector_index < 0:
-                    return 1
             elif not a_matches and b_matches:
                 # b has lower level match, takes precedence
                 return -1

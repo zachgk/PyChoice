@@ -4,6 +4,7 @@ import functools
 import inspect
 import io
 import json
+from collections.abc import Generator
 from functools import cmp_to_key
 from typing import Any, Callable, TypeVar, cast
 
@@ -260,4 +261,6 @@ class ChoiceJSONEncoder(json.JSONEncoder):
                 "funcs": list(obj.funcs.keys()),
                 "rules": [str(r.selector) for r in obj.rules],
             }
+        elif isinstance(obj, Generator):
+            return "Generator"
         return super().default(obj)
