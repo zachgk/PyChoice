@@ -251,16 +251,17 @@ def func(implements: ChoiceFunction | None = None, args: list[str] | None = None
 
 class ChoiceJSONEncoder(json.JSONEncoder):
     def default(self, obj: Any) -> Any:
-        if isinstance(obj, TraceItem):
-            return obj.to_dict()
-        elif isinstance(obj, Trace):
-            return {"items": [item.to_dict() for item in obj.items], "registry": registry}
-        elif isinstance(obj, ChoiceFunction):
-            return {
-                "interface": getattr(obj.interface.func, "__name__", str(obj.interface)),
-                "funcs": list(obj.funcs.keys()),
-                "rules": [str(r.selector) for r in obj.rules],
-            }
-        elif isinstance(obj, Generator):
-            return "Generator"
-        return super().default(obj)
+        try:
+            if isinstance(obj, TraceItem):
+                return obj.to_dict()
+            elif isinstance(obj, Trace):
+                return {"items": [item.to_dict() for item in obj.items], "registry": registry}
+            elif isinstance(obj, ChoiceFunction):
+                return {
+                    "interface": getattr(obj.interface.func, "__name__", str(obj.interface)),
+                    "funcs": list(obj.funcs.keys()),
+                    "rules": [str(r.selector) for r in obj.rules],
+                }
+            return super().default(obj)
+        except Exception:
+            return type(obj).__name__
