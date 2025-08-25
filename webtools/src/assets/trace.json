@@ -109,7 +109,7 @@
             "<module> at /data/projects/dlchoice/dlchoice/image_classification.py:35"
           ],
           "args": [
-            "<generator object Module.parameters at 0x7fb7fd316960>"
+            "<generator object Module.parameters at 0x7f2003712960>"
           ],
           "kwargs": {},
           "choice_kwargs": {
@@ -126,12 +126,14 @@
       "interface": {
         "id": "554e5e2a-dae9-54f7-a922-ef9bc49b3568",
         "func": "loss_function",
+        "module": "dlchoice.loss",
         "defaults": {}
       },
       "funcs": {
         "b5bf22ed-966e-5d27-9840-d4d349feea56": {
           "id": "b5bf22ed-966e-5d27-9840-d4d349feea56",
           "func": "CrossEntropyLoss",
+          "module": "torch.nn.modules.loss",
           "defaults": {
             "weight": "None",
             "size_average": "None",
@@ -154,6 +156,7 @@
       "interface": {
         "id": "6e5a2c2e-7ebc-5990-b9fc-d4cf889a79c0",
         "func": "create_optimizer",
+        "module": "dlchoice.optim",
         "defaults": {
           "parameters": "<class 'inspect._empty'>"
         }
@@ -162,6 +165,7 @@
         "e686c7dc-9940-52c6-b820-79ec6930339a": {
           "id": "e686c7dc-9940-52c6-b820-79ec6930339a",
           "func": "AdamW",
+          "module": "torch.optim.adamw",
           "defaults": {
             "params": "<class 'inspect._empty'>",
             "lr": "0.001",
@@ -188,6 +192,7 @@
       "interface": {
         "id": "1404ba02-c74f-5c0d-97f2-63c458a9f7b3",
         "func": "ChoiceTrainer",
+        "module": "dlchoice.train",
         "defaults": {
           "accelerator": "auto",
           "strategy": "auto",
@@ -244,6 +249,7 @@
       "interface": {
         "id": "94f53060-633e-5e29-8783-8dce0e0b1ae9",
         "func": "train",
+        "module": "dlchoice.train",
         "defaults": {
           "model": "<class 'inspect._empty'>",
           "data": "<class 'inspect._empty'>"

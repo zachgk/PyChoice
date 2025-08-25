@@ -14,7 +14,7 @@ import {
 import { LuChevronRight } from "react-icons/lu"
 import { useState } from 'react'
 import type { ReactElement } from 'react'
-import type { TraceItemData, ChoiceFunction, MatchedRule } from './data';
+import type { TraceItemData, ChoiceFunction, MatchedRule, ChoiceFuncImplementation } from './data';
 
 interface TraceItemsProps {
     items: TraceItemData[];
@@ -66,8 +66,8 @@ function TraceDetails(props: { traceItem: TraceItemData | null; registry: Record
   };
 
   // Helper function to format function call
-  const formatFunctionCall = (funcName: string, args: string[], kwargs: Record<string, string>): string => {
-    let callStr = `${funcName}(`;
+  const formatFunctionCall = (func: ChoiceFuncImplementation, args: string[], kwargs: Record<string, string>): string => {
+    let callStr = `${func.module}.${func.func}(`;
 
     // Add positional arguments with formatting
     const argParts = [];
@@ -118,7 +118,7 @@ function TraceDetails(props: { traceItem: TraceItemData | null; registry: Record
         <Box w="100%">
           <Text fontWeight="semibold" mb={2}>Base Call:</Text>
           <Code p={3} display="block" bg="gray.100" borderRadius="md" fontSize="sm" whiteSpace="pre-wrap">
-            {formatFunctionCall(entry.interface.func, traceItem.args, traceItem.kwargs)}
+            {formatFunctionCall(entry.interface, traceItem.args, traceItem.kwargs)}
           </Code>
         </Box>
 
@@ -126,7 +126,7 @@ function TraceDetails(props: { traceItem: TraceItemData | null; registry: Record
         <Box w="100%">
           <Text fontWeight="semibold" mb={2}>Computed Choice Call:</Text>
           <Code p={3} display="block" bg="green.100" borderRadius="md" fontSize="sm" whiteSpace="pre-wrap">
-            {formatFunctionCall(impl.func, traceItem.args, traceItem.choice_kwargs)}
+            {formatFunctionCall(impl, traceItem.args, traceItem.choice_kwargs)}
           </Code>
         </Box>
 

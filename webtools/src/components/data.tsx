@@ -23,6 +23,7 @@ interface TraceItemData {
 interface ChoiceFuncImplementation {
   id: string
   func: string
+  module: string
   defaults: Record<string, string>
 }
 

@@ -262,6 +262,7 @@ class ChoiceJSONEncoder(json.JSONEncoder):
             return {
                 "id": str(obj.id),
                 "func": getattr(obj.func, "__name__", str(obj)),
+                "module": getattr(obj.func, "__module__", ""),
                 "defaults": {k: str(v) for k, v in obj.defaults.items()},
             }
         elif isinstance(obj, Rule):
