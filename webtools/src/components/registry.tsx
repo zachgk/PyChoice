@@ -15,6 +15,8 @@ import { findImplementationName } from './utils';
 
 interface RegistryProps {
     registry: Record<string, ChoiceFunction>;
+    highlightedEntryId?: string | null;
+    onClearHighlight?: () => void;
 }
 
 function ChoiceFuncImplementationDisplay({ impl, name }: { impl: ChoiceFuncImplementation; name?: string }) {
@@ -50,21 +52,43 @@ function ChoiceFuncImplementationDisplay({ impl, name }: { impl: ChoiceFuncImple
 }
 
 function Registry(props: RegistryProps) {
-    const { registry } = props;
+    const { registry, highlightedEntryId, onClearHighlight } = props;
     
-    // Helper function to find implementation name by ID
     return (
         <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)", lg: "repeat(3, 1fr)" }} gap={6}>
-            {Object.entries(registry).map(([key, entry]) => (
-            <GridItem key={key}>
-                <Box
-                borderWidth="1px"
-                borderRadius="md"
-                p={4}
-                bg="white"
-                shadow="sm"
-                h="100%"
-                >
+            {Object.entries(registry).map(([key, entry]) => {
+                const isHighlighted = highlightedEntryId === entry.id;
+                return (
+                <GridItem key={key}>
+                    <Box
+                    borderWidth={isHighlighted ? "3px" : "1px"}
+                    borderColor={isHighlighted ? "blue.500" : "gray.200"}
+                    borderRadius="md"
+                    p={4}
+                    bg={isHighlighted ? "blue.50" : "white"}
+                    shadow={isHighlighted ? "lg" : "sm"}
+                    h="100%"
+                    position="relative"
+                    >
+                    {isHighlighted && (
+                        <Box
+                        position="absolute"
+                        top={2}
+                        right={2}
+                        bg="blue.500"
+                        color="white"
+                        px={2}
+                        py={1}
+                        borderRadius="sm"
+                        fontSize="xs"
+                        fontWeight="bold"
+                        cursor="pointer"
+                        onClick={onClearHighlight}
+                        _hover={{ bg: "blue.600" }}
+                        >
+                        ✕
+                        </Box>
+                    )}
                 <VStack align="start" gap={3}>
                     <Heading as="h3" size="md" color="blue.600">
                     {entry.interface.func}
@@ -116,7 +140,8 @@ function Registry(props: RegistryProps) {
                 </VStack>
                 </Box>
             </GridItem>
-            ))}
+                );
+            })}
         </Grid>
     );
 }

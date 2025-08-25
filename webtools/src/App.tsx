@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom'
 import {
   Box,
   Container,
@@ -14,12 +15,36 @@ import TraceItems from './components/trace';
 
 function App() {
   const [data] = useState<TraceData>(traceData as TraceData)
+  const location = useLocation()
+  const navigate = useNavigate()
 
+  // Extract highlighted registry entry from URL params
+  const searchParams = new URLSearchParams(location.search)
+  const highlightedEntryId = searchParams.get('highlight')
+
+  // Determine current tab based on route
+  const currentTab = location.pathname === '/registry' ? 'registry' : 'traces'
+
+  const handleTabChange = (details: any) => {
+    if (details.value === 'registry') {
+      navigate('/registry')
+    } else {
+      navigate('/')
+    }
+  }
+
+  const navigateToRegistryEntry = (entryId: string) => {
+    navigate(`/registry?highlight=${entryId}`)
+  }
 
   const renderTraceItems = () => (
     <Box>
       {data.items.length > 0 ? (
-        <TraceItems items={data.items} registry={data.registry} />
+        <TraceItems 
+          items={data.items} 
+          registry={data.registry} 
+          onNavigateToRegistry={navigateToRegistryEntry}
+        />
       ) : (
         <Box
           borderWidth="1px"
@@ -34,6 +59,13 @@ function App() {
     </Box>
   )
 
+  const renderRegistry = () => (
+    <Registry 
+      registry={data.registry} 
+      highlightedEntryId={highlightedEntryId}
+      onClearHighlight={() => navigate('/registry')}
+    />
+  )
 
   return (
     <Box minH="100vh" bg="gray.50">
@@ -46,7 +78,7 @@ function App() {
       </Box>
 
       <Container maxW="container.xl" py={8}>
-        <Tabs.Root defaultValue="traces" variant="enclosed">
+        <Tabs.Root value={currentTab} onValueChange={handleTabChange} variant="enclosed">
           <Tabs.List>
             <Tabs.Trigger value="traces">
               <Text fontWeight="semibold">Trace Items</Text>
@@ -56,13 +88,12 @@ function App() {
             </Tabs.Trigger>
           </Tabs.List>
 
-          <Tabs.Content value="traces" pt={6}>
-            {renderTraceItems()}
-          </Tabs.Content>
-
-          <Tabs.Content value="registry" pt={6}>
-            <Registry registry={data.registry} />
-          </Tabs.Content>
+          <Box pt={6}>
+            <Routes>
+              <Route path="/" element={renderTraceItems()} />
+              <Route path="/registry" element={renderRegistry()} />
+            </Routes>
+          </Box>
         </Tabs.Root>
       </Container>
     </Box>

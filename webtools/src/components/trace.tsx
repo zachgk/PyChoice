@@ -19,6 +19,7 @@ import { findImplementationName } from './utils';
 interface TraceItemsProps {
     items: TraceItemData[];
     registry: Record<string, ChoiceFunction>;
+    onNavigateToRegistry?: (entryId: string) => void;
 }
 
 interface TreeNode {
@@ -28,8 +29,8 @@ interface TreeNode {
   children?: TreeNode[];
 }
 
-function TraceDetails(props: { traceItem: TraceItemData | null; registry: Record<string, ChoiceFunction> }) {
-  const { traceItem, registry } = props;
+function TraceDetails(props: { traceItem: TraceItemData | null; registry: Record<string, ChoiceFunction>; onNavigateToRegistry?: (entryId: string) => void }) {
+  const { traceItem, registry, onNavigateToRegistry } = props;
   
   // Helper function to find choice function name by ID
   const findChoiceFunctionName = (funcId: string): string => {
@@ -172,7 +173,21 @@ function TraceDetails(props: { traceItem: TraceItemData | null; registry: Record
 
         {/* Registry Entry Fields */}
         <Box w="100%">
-          <Text fontWeight="semibold" mb={2}>Registry Entry ID:</Text>
+          <HStack mb={2} justify="space-between" align="center">
+            <Text fontWeight="semibold">Registry Entry ID:</Text>
+            {onNavigateToRegistry && (
+              <Text
+                fontSize="sm"
+                color="blue.600"
+                cursor="pointer"
+                textDecoration="underline"
+                _hover={{ color: "blue.800" }}
+                onClick={() => onNavigateToRegistry(entry.id)}
+              >
+                View in Registry →
+              </Text>
+            )}
+          </HStack>
           <Code p={2} display="block" bg="blue.50" borderRadius="md" fontSize="xs">
             {entry.id}
           </Code>
@@ -391,7 +406,11 @@ function TraceItems(props: TraceItemsProps) {
             <Box p={3} borderBottom="1px" borderColor="gray.200" bg="gray.50">
               <Text fontWeight="semibold" fontSize="sm">Function Details</Text>
             </Box>
-            <TraceDetails traceItem={selectedNode ? selectedNode.data : null} registry={props.registry} />
+            <TraceDetails 
+              traceItem={selectedNode ? selectedNode.data : null} 
+              registry={props.registry} 
+              onNavigateToRegistry={props.onNavigateToRegistry}
+            />
           </Box>
         </GridItem>
       </Grid>
