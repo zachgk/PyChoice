@@ -9,9 +9,11 @@ import {
   createTreeCollection,
   Grid,
   GridItem,
+  Card,
 } from '@chakra-ui/react'
 import { LuChevronRight } from "react-icons/lu"
 import { useState } from 'react'
+import type { ReactElement } from 'react'
 import type { TraceItemData, ChoiceFunction, MatchedRule } from './data';
 
 interface TraceItemsProps {
@@ -39,6 +41,28 @@ function TraceDetails(props: { traceItem: TraceItemData | null; registry: Record
       return cleanedValue;
     }
     return cleanedValue.substring(0, maxLength) + '...';
+  };
+
+  // Helper function to render values in a structured format
+  const renderValues = (values: Record<string, string>): ReactElement | null => {
+    if (Object.keys(values).length === 0) {
+      return null;
+    }
+    
+    return (
+      <VStack align="start" gap={1} pl={2}>
+        {Object.entries(values).map(([key, value]) => (
+          <HStack key={key} align="start" gap={2}>
+            <Text fontSize="sm" fontWeight="medium" color="blue.600" minW="fit-content">
+              {key}:
+            </Text>
+            <Text fontSize="sm" color="gray.700">
+              {value}
+            </Text>
+          </HStack>
+        ))}
+      </VStack>
+    );
   };
 
   // Helper function to format function call
@@ -108,30 +132,26 @@ function TraceDetails(props: { traceItem: TraceItemData | null; registry: Record
 
         <Box w="100%">
           <Text fontWeight="semibold" mb={2}>Matched Rules:</Text>
-          <VStack align="start" gap={2}>
+          <VStack align="start" gap={3}>
             {allRules.reverse().map((matchedRule, index) => (
-              <Box key={index} p={2} bg="gray.50" borderRadius="md" w="100%">
-                <VStack align="start" gap={1}>
-                  <HStack>
-                    <Text fontSize="sm" fontWeight="medium">Selector:</Text>
-                    <Code fontSize="sm">{matchedRule.rule.selector}</Code>
-                  </HStack>
-                  <Box>
-                    <Text fontSize="sm" fontWeight="medium">Values:</Text>
-                    <Code fontSize="xs" display="block" mt={1} whiteSpace="pre-wrap">
-                      {JSON.stringify(matchedRule.vals, null, 2)}
-                    </Code>
-                  </Box>
-                  {Object.keys(matchedRule.captures).length > 0 && (
+              <Card.Root key={index} w="100%" variant="outline">
+                <Card.Header pb={2}>
+                  {matchedRule.rule.selector}
+                </Card.Header>
+                <Card.Body pt={0}>
+                  <VStack align="start" gap={2}>
                     <Box>
-                      <Text fontSize="sm" fontWeight="medium">Captures:</Text>
-                      <Code fontSize="xs" display="block" mt={1} whiteSpace="pre-wrap">
-                        {JSON.stringify(matchedRule.captures, null, 2)}
-                      </Code>
+                      {renderValues(matchedRule.vals)}
                     </Box>
-                  )}
-                </VStack>
-              </Box>
+                    {Object.keys(matchedRule.captures).length > 0 && (
+                      <Box>
+                        <Text fontSize="sm" fontWeight="medium" mb={1}>Captures:</Text>
+                        {renderValues(matchedRule.captures)}
+                      </Box>
+                    )}
+                  </VStack>
+                </Card.Body>
+              </Card.Root>
             ))}
           </VStack>
         </Box>
