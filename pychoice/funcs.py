@@ -268,7 +268,6 @@ class ChoiceJSONEncoder(json.JSONEncoder):
             return {
                 "selector": str(obj.selector),
                 "impl": str(obj.impl.id),
-                "vals": obj.vals.__name__,
             }
         elif isinstance(obj, MatchedRule):
             return {

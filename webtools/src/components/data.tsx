@@ -1,12 +1,12 @@
 interface ChoiceRule {
   selector: string
   impl: string
-  vals: string
 }
 
 interface MatchedRule {
   rule: ChoiceRule
   captures: Record<string, string>
+  vals: Record<string, string>
 }
 
 interface TraceItemData {

@@ -7,8 +7,7 @@
         {
           "rule": {
             "selector": "main CrossEntropyLoss",
-            "impl": "b5bf22ed-966e-5d27-9840-d4d349feea56",
-            "vals": "<lambda>"
+            "impl": "b5bf22ed-966e-5d27-9840-d4d349feea56"
           },
           "captures": {},
           "vals": {}
@@ -48,8 +47,7 @@
             {
               "rule": {
                 "selector": "main ChoiceTrainer",
-                "impl": "1404ba02-c74f-5c0d-97f2-63c458a9f7b3",
-                "vals": "<lambda>"
+                "impl": "1404ba02-c74f-5c0d-97f2-63c458a9f7b3"
               },
               "captures": {},
               "vals": {
@@ -78,8 +76,7 @@
             {
               "rule": {
                 "selector": " AdamW",
-                "impl": "e686c7dc-9940-52c6-b820-79ec6930339a",
-                "vals": "<lambda>"
+                "impl": "e686c7dc-9940-52c6-b820-79ec6930339a"
               },
               "captures": {},
               "vals": {}
@@ -87,8 +84,7 @@
             {
               "rule": {
                 "selector": "main AdamW",
-                "impl": "e686c7dc-9940-52c6-b820-79ec6930339a",
-                "vals": "<lambda>"
+                "impl": "e686c7dc-9940-52c6-b820-79ec6930339a"
               },
               "captures": {},
               "vals": {
@@ -113,7 +109,7 @@
             "<module> at /data/projects/dlchoice/dlchoice/image_classification.py:35"
           ],
           "args": [
-            "<generator object Module.parameters at 0x7f3b3a62e960>"
+            "<generator object Module.parameters at 0x7fb7fd316960>"
           ],
           "kwargs": {},
           "choice_kwargs": {
@@ -149,8 +145,7 @@
       "rules": [
         {
           "selector": "main CrossEntropyLoss",
-          "impl": "b5bf22ed-966e-5d27-9840-d4d349feea56",
-          "vals": "<lambda>"
+          "impl": "b5bf22ed-966e-5d27-9840-d4d349feea56"
         }
       ]
     },
@@ -180,13 +175,11 @@
       "rules": [
         {
           "selector": " AdamW",
-          "impl": "e686c7dc-9940-52c6-b820-79ec6930339a",
-          "vals": "<lambda>"
+          "impl": "e686c7dc-9940-52c6-b820-79ec6930339a"
         },
         {
           "selector": "main AdamW",
-          "impl": "e686c7dc-9940-52c6-b820-79ec6930339a",
-          "vals": "<lambda>"
+          "impl": "e686c7dc-9940-52c6-b820-79ec6930339a"
         }
       ]
     },
@@ -242,8 +235,7 @@
       "rules": [
         {
           "selector": "main ChoiceTrainer",
-          "impl": "1404ba02-c74f-5c0d-97f2-63c458a9f7b3",
-          "vals": "<lambda>"
+          "impl": "1404ba02-c74f-5c0d-97f2-63c458a9f7b3"
         }
       ]
     },

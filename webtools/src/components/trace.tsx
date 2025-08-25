@@ -82,8 +82,10 @@ function TraceDetails(props: { traceItem: TraceItemData | null; registry: Record
   const impl = entry.funcs[traceItem.impl] || entry.interface;
 
   const defRule: MatchedRule = {
-    rule: {selector: '<defaults>', impl: impl.func, vals: ''},
-    captures: {}};
+    rule: {selector: '<defaults>', impl: impl.func},
+    captures: {},
+    vals: impl.defaults,
+  };
   const allRules = [defRule, ...traceItem.rules];
   return (
     <Box p={4}>
@@ -114,10 +116,12 @@ function TraceDetails(props: { traceItem: TraceItemData | null; registry: Record
                     <Text fontSize="sm" fontWeight="medium">Selector:</Text>
                     <Code fontSize="sm">{matchedRule.rule.selector}</Code>
                   </HStack>
-                  <HStack>
-                    <Text fontSize="sm" fontWeight="medium">Vals:</Text>
-                    <Code fontSize="sm">{matchedRule.rule.vals}</Code>
-                  </HStack>
+                  <Box>
+                    <Text fontSize="sm" fontWeight="medium">Values:</Text>
+                    <Code fontSize="xs" display="block" mt={1} whiteSpace="pre-wrap">
+                      {JSON.stringify(matchedRule.vals, null, 2)}
+                    </Code>
+                  </Box>
                   {Object.keys(matchedRule.captures).length > 0 && (
                     <Box>
                       <Text fontSize="sm" fontWeight="medium">Captures:</Text>
