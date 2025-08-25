@@ -10,14 +10,49 @@ import {
   Grid,
   GridItem,
 } from '@chakra-ui/react'
-import type { RegistryEntry } from './data';
+import type { ChoiceFunction, ChoiceFuncImplementation } from './data';
+import { findImplementationName } from './utils';
 
 interface RegistryProps {
-    registry: Record<string, RegistryEntry>;
+    registry: Record<string, ChoiceFunction>;
+}
+
+function ChoiceFuncImplementationDisplay({ impl, name }: { impl: ChoiceFuncImplementation; name?: string }) {
+    return (
+        <Box borderWidth="1px" borderRadius="sm" p={2} bg="gray.50">
+            <VStack align="start" gap={1}>
+                {name && (
+                    <HStack>
+                        <Text fontSize="sm" fontWeight="medium">Name:</Text>
+                        <Code fontSize="sm">{name}</Code>
+                    </HStack>
+                )}
+                <HStack>
+                    <Text fontSize="sm">Function:</Text>
+                    <Code fontSize="sm">{impl.func}</Code>
+                </HStack>
+                {Object.keys(impl.defaults).length > 0 && (
+                    <Box>
+                        <Text fontSize="sm" fontWeight="medium">Defaults:</Text>
+                        <VStack align="start" gap={1} ml={2}>
+                            {Object.entries(impl.defaults).map(([key, value]) => (
+                                <HStack key={key}>
+                                    <Text fontSize="xs">{key}:</Text>
+                                    <Code fontSize="xs">{value}</Code>
+                                </HStack>
+                            ))}
+                        </VStack>
+                    </Box>
+                )}
+            </VStack>
+        </Box>
+    );
 }
 
 function Registry(props: RegistryProps) {
     const { registry } = props;
+    
+    // Helper function to find implementation name by ID
     return (
         <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)", lg: "repeat(3, 1fr)" }} gap={6}>
             {Object.entries(registry).map(([key, entry]) => (
@@ -32,34 +67,26 @@ function Registry(props: RegistryProps) {
                 >
                 <VStack align="start" gap={3}>
                     <Heading as="h3" size="md" color="blue.600">
-                    {key}
+                    {entry.interface.func}
                     </Heading>
 
                     <Box>
-                    <Text fontWeight="semibold">Interface:</Text>
-                    <VStack align="start" gap={1} mt={1}>
-                        <HStack>
-                        <Text fontSize="sm">Function:</Text>
-                        <Code fontSize="sm">{entry.interface.func}</Code>
-                        </HStack>
-                        <HStack>
-                        <Text fontSize="sm">ID:</Text>
-                        <Code fontSize="sm">{entry.interface.id}</Code>
-                        </HStack>
-                    </VStack>
+                    <Text fontWeight="semibold" mb={2}>Interface:</Text>
+                    <ChoiceFuncImplementationDisplay impl={entry.interface} />
                     </Box>
 
                     <Box>
-                    <Text fontWeight="semibold">Functions:</Text>
-                    <VStack align="start" gap={1} mt={1}>
+                    <Text fontWeight="semibold" mb={2}>Functions:</Text>
+                    <VStack align="start" gap={2}>
                         {Object.entries(entry.funcs).map(([funcName, funcImpl]) => (
-                        <HStack key={funcName}>
-                            <Text fontSize="sm">{funcName}:</Text>
-                            <Code fontSize="sm">{funcImpl.id}</Code>
-                        </HStack>
+                            <ChoiceFuncImplementationDisplay 
+                                key={funcName} 
+                                impl={funcImpl} 
+                                name={funcName} 
+                            />
                         ))}
                         {Object.keys(entry.funcs).length === 0 && (
-                        <Text fontSize="sm" color="gray.500">No functions</Text>
+                        <Text fontSize="sm" color="gray.500">No additional implementations defined</Text>
                         )}
                     </VStack>
                     </Box>
@@ -76,7 +103,7 @@ function Registry(props: RegistryProps) {
                             </HStack>
                             <HStack>
                                 <Text fontSize="xs">Impl:</Text>
-                                <Code fontSize="xs">{rule.impl}</Code>
+                                <Code fontSize="xs">{findImplementationName(rule.impl, entry)}</Code>
                             </HStack>
                             </VStack>
                         </ListItem>

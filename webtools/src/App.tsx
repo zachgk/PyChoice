@@ -19,7 +19,7 @@ function App() {
   const renderTraceItems = () => (
     <Box>
       {data.items.length > 0 ? (
-        <TraceItems items={data.items} />
+        <TraceItems items={data.items} registry={data.registry} />
       ) : (
         <Box
           borderWidth="1px"

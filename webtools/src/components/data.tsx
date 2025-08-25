@@ -26,22 +26,16 @@ interface ChoiceFuncImplementation {
   defaults: Record<string, string>
 }
 
-interface ChoiceInterface {
+interface ChoiceFunction {
   id: string
-  func: string
-  defaults: Record<string, string>
-}
-
-interface RegistryEntry {
-  id: string
-  interface: ChoiceInterface
+  interface: ChoiceFuncImplementation
   funcs: Record<string, ChoiceFuncImplementation>
   rules: ChoiceRule[]
 }
 
 interface TraceData {
   items: TraceItemData[]
-  registry: Record<string, RegistryEntry>
+  registry: Record<string, ChoiceFunction>
 }
 
-export type { TraceItemData, RegistryEntry, TraceData }
+export type { TraceItemData, ChoiceFunction, TraceData, ChoiceFuncImplementation }
