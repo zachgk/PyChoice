@@ -9,12 +9,10 @@ import {
   createTreeCollection,
   Grid,
   GridItem,
-  Heading
 } from '@chakra-ui/react'
 import { LuChevronRight } from "react-icons/lu"
 import { useState } from 'react'
-import type { TraceItemData, ChoiceFunction } from './data';
-import { findImplementationName } from './utils';
+import type { TraceItemData, ChoiceFunction, MatchedRule } from './data';
 
 interface TraceItemsProps {
     items: TraceItemData[];
@@ -32,14 +30,44 @@ interface TreeNode {
 function TraceDetails(props: { traceItem: TraceItemData | null; registry: Record<string, ChoiceFunction>; onNavigateToRegistry?: (entryId: string) => void }) {
   const { traceItem, registry, onNavigateToRegistry } = props;
   
-  // Helper function to find choice function name by ID
-  const findChoiceFunctionName = (funcId: string): string => {
-    const entry = registry[funcId];
-    if (entry) {
-      return entry.interface.func;
+  // Helper function to format function values by stripping newlines and truncating to at most 30 characters
+  const formatFunctionValue = (value: string, maxLength: number = 30): string => {
+    // Strip newline characters and replace with spaces
+    const cleanedValue = value.replace(/\n/g, ' ');
+    
+    if (cleanedValue.length <= maxLength) {
+      return cleanedValue;
     }
-    // If not found, return the ID as fallback
-    return funcId;
+    return cleanedValue.substring(0, maxLength) + '...';
+  };
+
+  // Helper function to format function call
+  const formatFunctionCall = (funcName: string, args: string[], kwargs: Record<string, string>): string => {
+    let callStr = `${funcName}(`;
+    
+    // Add positional arguments with formatting
+    const argParts = [];
+    if (args.length > 0) {
+      argParts.push(...args.map(arg => formatFunctionValue(arg)));
+    }
+    
+    // Add keyword arguments with formatting
+    const kwargEntries = Object.entries(kwargs);
+    if (kwargEntries.length > 0) {
+      argParts.push(...kwargEntries.map(([key, value]) => `${key}=${formatFunctionValue(value)}`));
+    }
+    
+    // Join arguments with proper formatting
+    if (argParts.length > 0) {
+      if (argParts.length === 1) {
+        callStr += argParts[0];
+      } else {
+        callStr += '\n  ' + argParts.join(',\n  ') + '\n';
+      }
+    }
+    
+    callStr += ')';
+    return callStr;
   };
   
   if (!traceItem) {
@@ -53,128 +81,71 @@ function TraceDetails(props: { traceItem: TraceItemData | null; registry: Record
   const entry = registry[traceItem.func];
   const impl = entry.funcs[traceItem.impl] || entry.interface; 
   
+  const defRule: MatchedRule = {
+    rule: {selector: '<defaults>', impl: impl.func, vals: ''},
+    captures: {}};
+  const allRules = [defRule, ...traceItem.rules];
   return (
     <Box p={4}>
       <VStack align="start" gap={4}>
-        {/* Function Header */}
-        <Box>
-          <HStack mb={2}>
-            <Badge colorScheme="blue">Function</Badge>
-            <Heading as="h3" size="md">{entry.interface.func}</Heading>
-          </HStack>
+        {/* Base Call */}
+        <Box w="100%">
+          <Text fontWeight="semibold" mb={2}>Base Call:</Text>
+          <Code p={3} display="block" bg="gray.100" borderRadius="md" fontSize="sm" whiteSpace="pre-wrap">
+            {formatFunctionCall(entry.interface.func, traceItem.args, traceItem.kwargs)}
+          </Code>
         </Box>
 
-        {/* TraceItem Fields */}
+        {/* Computed Choice Call */}
         <Box w="100%">
-          <Text fontWeight="semibold" mb={2}>Function ID:</Text>
-          <Code p={2} display="block" bg="gray.50" borderRadius="md" fontSize="xs">
-            {traceItem.func}
+          <Text fontWeight="semibold" mb={2}>Computed Choice Call:</Text>
+          <Code p={3} display="block" bg="green.100" borderRadius="md" fontSize="sm" whiteSpace="pre-wrap">
+            {formatFunctionCall(impl.func, traceItem.args, traceItem.choice_kwargs)}
           </Code>
         </Box>
 
         <Box w="100%">
-          <Text fontWeight="semibold" mb={2}>Implementation:</Text>
-          <Code p={2} display="block" bg="gray.50" borderRadius="md">
-            {impl.func}
-          </Code>
+          <Text fontWeight="semibold" mb={2}>Matched Rules:</Text>
+          <VStack align="start" gap={2}>
+            {allRules.reverse().map((matchedRule, index) => (
+              <Box key={index} p={2} bg="gray.50" borderRadius="md" w="100%">
+                <VStack align="start" gap={1}>
+                  <HStack>
+                    <Text fontSize="sm" fontWeight="medium">Selector:</Text>
+                    <Code fontSize="sm">{matchedRule.rule.selector}</Code>
+                  </HStack>
+                  <HStack>
+                    <Text fontSize="sm" fontWeight="medium">Vals:</Text>
+                    <Code fontSize="sm">{matchedRule.rule.vals}</Code>
+                  </HStack>
+                  {Object.keys(matchedRule.captures).length > 0 && (
+                    <Box>
+                      <Text fontSize="sm" fontWeight="medium">Captures:</Text>
+                      <Code fontSize="xs" display="block" mt={1} whiteSpace="pre-wrap">
+                        {JSON.stringify(matchedRule.captures, null, 2)}
+                      </Code>
+                    </Box>
+                  )}
+                </VStack>
+              </Box>
+            ))}
+          </VStack>
         </Box>
 
         <Box w="100%">
-          <Text fontWeight="semibold" mb={2}>Implementation ID:</Text>
-          <Code p={2} display="block" bg="gray.50" borderRadius="md" fontSize="xs">
-            {traceItem.impl}
-          </Code>
+          <Text fontWeight="semibold" mb={2}>Call Stack:</Text>
+          <VStack align="start" gap={1}>
+            {traceItem.stack_info.map((stackFrame, index) => (
+              <Code key={index} p={1} display="block" bg="gray.50" borderRadius="sm" fontSize="xs" w="100%">
+                {stackFrame}
+              </Code>
+            ))}
+          </VStack>
         </Box>
 
-        <Box w="100%">
-          <Text fontWeight="semibold" mb={2}>Arguments:</Text>
-          <Code p={2} display="block" bg="gray.50" borderRadius="md">
-            [{traceItem.args.join(', ')}]
-          </Code>
-        </Box>
-
-        {traceItem.stack_info.length > 0 && (
-          <Box w="100%">
-            <Text fontWeight="semibold" mb={2}>Stack Info:</Text>
-            <VStack align="start" gap={1}>
-              {traceItem.stack_info.map((stackFrame, index) => (
-                <Code key={index} p={1} display="block" bg="gray.50" borderRadius="sm" fontSize="xs" w="100%">
-                  {stackFrame}
-                </Code>
-              ))}
-            </VStack>
-          </Box>
-        )}
-
-        {traceItem.rules.length > 0 && (
-          <Box w="100%">
-            <Text fontWeight="semibold" mb={2}>Matched Rules:</Text>
-            <VStack align="start" gap={2}>
-              {traceItem.rules.map((matchedRule, index) => (
-                <Box key={index} p={2} bg="gray.50" borderRadius="md" w="100%">
-                  <VStack align="start" gap={1}>
-                    <HStack>
-                      <Text fontSize="sm" fontWeight="medium">Selector:</Text>
-                      <Code fontSize="sm">{matchedRule.rule.selector}</Code>
-                    </HStack>
-                    <HStack>
-                      <Text fontSize="sm" fontWeight="medium">Impl:</Text>
-                      <Code fontSize="sm">{findImplementationName(matchedRule.rule.impl, entry)}</Code>
-                    </HStack>
-                    <HStack>
-                      <Text fontSize="sm" fontWeight="medium">Vals:</Text>
-                      <Code fontSize="sm">{matchedRule.rule.vals}</Code>
-                    </HStack>
-                    {Object.keys(matchedRule.captures).length > 0 && (
-                      <Box>
-                        <Text fontSize="sm" fontWeight="medium">Captures:</Text>
-                        <Code fontSize="xs" display="block" mt={1} whiteSpace="pre-wrap">
-                          {JSON.stringify(matchedRule.captures, null, 2)}
-                        </Code>
-                      </Box>
-                    )}
-                  </VStack>
-                </Box>
-              ))}
-            </VStack>
-          </Box>
-        )}
-
-        {Object.keys(traceItem.kwargs).length > 0 && (
-          <Box w="100%">
-            <Text fontWeight="semibold" mb={2}>Kwargs:</Text>
-            <Code p={2} display="block" bg="gray.50" borderRadius="md" whiteSpace="pre-wrap">
-              {JSON.stringify(traceItem.kwargs, null, 2)}
-            </Code>
-          </Box>
-        )}
-
-        {Object.keys(traceItem.choice_kwargs).length > 0 && (
-          <Box w="100%">
-            <Text fontWeight="semibold" mb={2}>Choice Kwargs:</Text>
-            <Code p={2} display="block" bg="gray.50" borderRadius="md" whiteSpace="pre-wrap">
-              {JSON.stringify(traceItem.choice_kwargs, null, 2)}
-            </Code>
-          </Box>
-        )}
-
-        {traceItem.items.length > 0 && (
-          <Box w="100%">
-            <Text fontWeight="semibold" mb={2}>Nested Functions:</Text>
-            <VStack align="start" gap={1}>
-              {traceItem.items.map((nestedItem, index) => (
-                <Badge key={index} colorScheme="green" size="sm">
-                  {findChoiceFunctionName(nestedItem.func)}
-                </Badge>
-              ))}
-            </VStack>
-          </Box>
-        )}
-
-        {/* Registry Entry Fields */}
         <Box w="100%">
           <HStack mb={2} justify="space-between" align="center">
-            <Text fontWeight="semibold">Registry Entry ID:</Text>
+            <Text fontWeight="semibold">Choice Function</Text>
             {onNavigateToRegistry && (
               <Text
                 fontSize="sm"
@@ -189,117 +160,8 @@ function TraceDetails(props: { traceItem: TraceItemData | null; registry: Record
             )}
           </HStack>
           <Code p={2} display="block" bg="blue.50" borderRadius="md" fontSize="xs">
-            {entry.id}
+            {entry.interface.func}
           </Code>
-        </Box>
-
-        <Box w="100%">
-          <Text fontWeight="semibold" mb={2}>Interface Details:</Text>
-          <Box p={2} bg="blue.50" borderRadius="md">
-            <VStack align="start" gap={1}>
-              <HStack>
-                <Text fontSize="sm" fontWeight="medium">ID:</Text>
-                <Code fontSize="xs">{entry.interface.id}</Code>
-              </HStack>
-              <HStack>
-                <Text fontSize="sm" fontWeight="medium">Function:</Text>
-                <Code fontSize="sm">{entry.interface.func}</Code>
-              </HStack>
-              {Object.keys(entry.interface.defaults).length > 0 && (
-                <Box>
-                  <Text fontSize="sm" fontWeight="medium">Defaults:</Text>
-                  <Code fontSize="xs" display="block" mt={1} whiteSpace="pre-wrap">
-                    {JSON.stringify(entry.interface.defaults, null, 2)}
-                  </Code>
-                </Box>
-              )}
-            </VStack>
-          </Box>
-        </Box>
-
-        {Object.keys(entry.funcs).length > 0 && (
-          <Box w="100%">
-            <Text fontWeight="semibold" mb={2}>Available Functions:</Text>
-            <VStack align="start" gap={2}>
-              {Object.entries(entry.funcs).map(([funcName, funcImpl]) => (
-                <Box key={funcName} p={2} bg="blue.50" borderRadius="md" w="100%">
-                  <VStack align="start" gap={1}>
-                    <HStack>
-                      <Text fontSize="sm" fontWeight="medium">Name:</Text>
-                      <Code fontSize="sm">{funcName}</Code>
-                    </HStack>
-                    <HStack>
-                      <Text fontSize="sm" fontWeight="medium">ID:</Text>
-                      <Code fontSize="xs">{funcImpl.id}</Code>
-                    </HStack>
-                    <HStack>
-                      <Text fontSize="sm" fontWeight="medium">Function:</Text>
-                      <Code fontSize="sm">{funcImpl.func}</Code>
-                    </HStack>
-                    {Object.keys(funcImpl.defaults).length > 0 && (
-                      <Box>
-                        <Text fontSize="sm" fontWeight="medium">Defaults:</Text>
-                        <Code fontSize="xs" display="block" mt={1} whiteSpace="pre-wrap">
-                          {JSON.stringify(funcImpl.defaults, null, 2)}
-                        </Code>
-                      </Box>
-                    )}
-                  </VStack>
-                </Box>
-              ))}
-            </VStack>
-          </Box>
-        )}
-
-        {entry.rules.length > 0 && (
-          <Box w="100%">
-            <Text fontWeight="semibold" mb={2}>Registry Rules:</Text>
-            <VStack align="start" gap={2}>
-              {entry.rules.map((rule, index) => (
-                <Box key={index} p={2} bg="blue.50" borderRadius="md" w="100%">
-                  <VStack align="start" gap={1}>
-                    <HStack>
-                      <Text fontSize="sm" fontWeight="medium">Selector:</Text>
-                      <Code fontSize="sm">{rule.selector}</Code>
-                    </HStack>
-                    <HStack>
-                      <Text fontSize="sm" fontWeight="medium">Impl:</Text>
-                      <Code fontSize="sm">{findImplementationName(rule.impl, entry)}</Code>
-                    </HStack>
-                    <HStack>
-                      <Text fontSize="sm" fontWeight="medium">Vals:</Text>
-                      <Code fontSize="sm">{rule.vals}</Code>
-                    </HStack>
-                  </VStack>
-                </Box>
-              ))}
-            </VStack>
-          </Box>
-        )}
-
-        {/* Current Implementation Details */}
-        <Box w="100%">
-          <Text fontWeight="semibold" mb={2}>Current Implementation Details:</Text>
-          <Box p={2} bg="green.50" borderRadius="md">
-            <VStack align="start" gap={1}>
-              <HStack>
-                <Text fontSize="sm" fontWeight="medium">ID:</Text>
-                <Code fontSize="xs">{impl.id}</Code>
-              </HStack>
-              <HStack>
-                <Text fontSize="sm" fontWeight="medium">Function:</Text>
-                <Code fontSize="sm">{impl.func}</Code>
-              </HStack>
-              {Object.keys(impl.defaults).length > 0 && (
-                <Box>
-                  <Text fontSize="sm" fontWeight="medium">Defaults:</Text>
-                  <Code fontSize="xs" display="block" mt={1} whiteSpace="pre-wrap">
-                    {JSON.stringify(impl.defaults, null, 2)}
-                  </Code>
-                </Box>
-              )}
-            </VStack>
-          </Box>
         </Box>
       </VStack>
     </Box>

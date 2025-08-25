@@ -38,4 +38,4 @@ interface TraceData {
   registry: Record<string, ChoiceFunction>
 }
 
-export type { TraceItemData, ChoiceFunction, TraceData, ChoiceFuncImplementation }
+export type { TraceItemData, ChoiceFunction, TraceData, ChoiceFuncImplementation, MatchedRule }
