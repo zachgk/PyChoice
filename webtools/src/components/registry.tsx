@@ -27,6 +27,14 @@ function ChoiceFuncImplementationDisplay({ impl }: { impl: ChoiceFuncImplementat
                     <Text fontSize="sm">Function:</Text>
                     <Code fontSize="sm">{impl.module}.{impl.func}</Code>
                 </HStack>
+                {impl.doc && (
+                    <Box>
+                        <Text fontSize="sm" fontWeight="medium">Documentation:</Text>
+                        <Text fontSize="xs" color="gray.600" ml={2} whiteSpace="pre-wrap">
+                            {impl.doc}
+                        </Text>
+                    </Box>
+                )}
                 {Object.keys(impl.defaults).length > 0 && (
                     <Box>
                         <Text fontSize="sm" fontWeight="medium">Defaults:</Text>
@@ -47,7 +55,7 @@ function ChoiceFuncImplementationDisplay({ impl }: { impl: ChoiceFuncImplementat
 
 function Registry(props: RegistryProps) {
     const { registry, highlightedEntryId, onClearHighlight } = props;
-    
+
     return (
         <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)", lg: "repeat(3, 1fr)" }} gap={6}>
             {Object.entries(registry).map(([key, entry]) => {
@@ -97,9 +105,9 @@ function Registry(props: RegistryProps) {
                                     <Text fontWeight="semibold" mb={2}>Functions:</Text>
                                     <VStack align="start" gap={2}>
                                         {Object.entries(entry.funcs).map(([funcName, funcImpl]) => (
-                                            <ChoiceFuncImplementationDisplay 
-                                                key={funcName} 
-                                                impl={funcImpl} 
+                                            <ChoiceFuncImplementationDisplay
+                                                key={funcName}
+                                                impl={funcImpl}
                                             />
                                         ))}
                                         {Object.keys(entry.funcs).length === 0 && (

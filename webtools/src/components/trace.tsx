@@ -48,7 +48,7 @@ function TraceDetails(props: { traceItem: TraceItemData | null; registry: Record
     if (Object.keys(values).length === 0) {
       return null;
     }
-    
+
     return (
       <VStack align="start" gap={1} pl={2}>
         {Object.entries(values).map(([key, value]) => (
@@ -136,7 +136,7 @@ function TraceDetails(props: { traceItem: TraceItemData | null; registry: Record
             {(() => {
               // Track seen key-value pairs to apply strikethrough to duplicates
               const seenValues = new Set<string>();
-              
+
               return allRules.map((matchedRule, index) => (
                 <Card.Root key={index} w="100%" variant="outline">
                   <Card.Header pb={2}>
@@ -149,20 +149,20 @@ function TraceDetails(props: { traceItem: TraceItemData | null; registry: Record
                           {Object.entries(matchedRule.vals).map(([key, value]) => {
                             const isStrikethrough = seenValues.has(key);
                             seenValues.add(key);
-                            
+
                             return (
                               <HStack key={key} align="start" gap={2}>
-                                <Text 
-                                  fontSize="sm" 
-                                  fontWeight="medium" 
-                                  color="blue.600" 
+                                <Text
+                                  fontSize="sm"
+                                  fontWeight="medium"
+                                  color="blue.600"
                                   minW="fit-content"
                                   textDecoration={isStrikethrough ? "line-through" : "none"}
                                 >
                                   {key}:
                                 </Text>
-                                <Text 
-                                  fontSize="sm" 
+                                <Text
+                                  fontSize="sm"
                                   color="gray.700"
                                   textDecoration={isStrikethrough ? "line-through" : "none"}
                                 >

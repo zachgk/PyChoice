@@ -25,6 +25,7 @@ interface ChoiceFuncImplementation {
   func: string
   module: string
   defaults: Record<string, string>
+  doc: string | null
 }
 
 interface ChoiceFunction {
