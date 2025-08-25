@@ -110,7 +110,7 @@ function TraceDetails(props: { traceItem: TraceItemData | null; registry: Record
     captures: {},
     vals: impl.defaults,
   };
-  const allRules = [defRule, ...traceItem.rules];
+  const allRules = [defRule, ...traceItem.rules].reverse();
   return (
     <Box p={4}>
       <VStack align="start" gap={4}>
@@ -133,26 +133,57 @@ function TraceDetails(props: { traceItem: TraceItemData | null; registry: Record
         <Box w="100%">
           <Text fontWeight="semibold" mb={2}>Matched Rules:</Text>
           <VStack align="start" gap={3}>
-            {allRules.reverse().map((matchedRule, index) => (
-              <Card.Root key={index} w="100%" variant="outline">
-                <Card.Header pb={2}>
-                  {matchedRule.rule.selector}
-                </Card.Header>
-                <Card.Body pt={0}>
-                  <VStack align="start" gap={2}>
-                    <Box>
-                      {renderValues(matchedRule.vals)}
-                    </Box>
-                    {Object.keys(matchedRule.captures).length > 0 && (
+            {(() => {
+              // Track seen key-value pairs to apply strikethrough to duplicates
+              const seenValues = new Set<string>();
+              
+              return allRules.map((matchedRule, index) => (
+                <Card.Root key={index} w="100%" variant="outline">
+                  <Card.Header pb={2}>
+                    {matchedRule.rule.selector}
+                  </Card.Header>
+                  <Card.Body pt={0}>
+                    <VStack align="start" gap={2}>
                       <Box>
-                        <Text fontSize="sm" fontWeight="medium" mb={1}>Captures:</Text>
-                        {renderValues(matchedRule.captures)}
+                        <VStack align="start" gap={1} pl={2}>
+                          {Object.entries(matchedRule.vals).map(([key, value]) => {
+                            const isStrikethrough = seenValues.has(key);
+                            seenValues.add(key);
+                            
+                            return (
+                              <HStack key={key} align="start" gap={2}>
+                                <Text 
+                                  fontSize="sm" 
+                                  fontWeight="medium" 
+                                  color="blue.600" 
+                                  minW="fit-content"
+                                  textDecoration={isStrikethrough ? "line-through" : "none"}
+                                >
+                                  {key}:
+                                </Text>
+                                <Text 
+                                  fontSize="sm" 
+                                  color="gray.700"
+                                  textDecoration={isStrikethrough ? "line-through" : "none"}
+                                >
+                                  {value}
+                                </Text>
+                              </HStack>
+                            );
+                          })}
+                        </VStack>
                       </Box>
-                    )}
-                  </VStack>
-                </Card.Body>
-              </Card.Root>
-            ))}
+                      {Object.keys(matchedRule.captures).length > 0 && (
+                        <Box>
+                          <Text fontSize="sm" fontWeight="medium" mb={1}>Captures:</Text>
+                          {renderValues(matchedRule.captures)}
+                        </Box>
+                      )}
+                    </VStack>
+                  </Card.Body>
+                </Card.Root>
+              ));
+            })()}
           </VStack>
         </Box>
 
