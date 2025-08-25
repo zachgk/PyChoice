@@ -6,15 +6,16 @@
       "rules": [
         {
           "rule": {
-            "selector": "Selector(main)",
+            "selector": "main CrossEntropyLoss",
             "impl": "b5bf22ed-966e-5d27-9840-d4d349feea56",
             "vals": "<lambda>"
           },
-          "captures": {}
+          "captures": {},
+          "vals": {}
         }
       ],
       "stack_info": [
-        "__call__ at /data/projects/PyChoice/pychoice/funcs.py:169",
+        "__call__ at /data/projects/PyChoice/pychoice/funcs.py:168",
         "__init__ at /data/projects/dlchoice/dlchoice/module.py:12",
         "main at /data/projects/dlchoice/dlchoice/image_classification.py:24",
         "<module> at /data/projects/dlchoice/dlchoice/image_classification.py:35"
@@ -29,7 +30,7 @@
       "impl": "94f53060-633e-5e29-8783-8dce0e0b1ae9",
       "rules": [],
       "stack_info": [
-        "__call__ at /data/projects/PyChoice/pychoice/funcs.py:169",
+        "__call__ at /data/projects/PyChoice/pychoice/funcs.py:168",
         "main at /data/projects/dlchoice/dlchoice/image_classification.py:26",
         "<module> at /data/projects/dlchoice/dlchoice/image_classification.py:35"
       ],
@@ -46,17 +47,20 @@
           "rules": [
             {
               "rule": {
-                "selector": "Selector(main)",
+                "selector": "main ChoiceTrainer",
                 "impl": "1404ba02-c74f-5c0d-97f2-63c458a9f7b3",
                 "vals": "<lambda>"
               },
-              "captures": {}
+              "captures": {},
+              "vals": {
+                "max_steps": "10"
+              }
             }
           ],
           "stack_info": [
-            "__call__ at /data/projects/PyChoice/pychoice/funcs.py:169",
+            "__call__ at /data/projects/PyChoice/pychoice/funcs.py:168",
             "train at /data/projects/dlchoice/dlchoice/train.py:152",
-            "__call__ at /data/projects/PyChoice/pychoice/funcs.py:175",
+            "__call__ at /data/projects/PyChoice/pychoice/funcs.py:174",
             "main at /data/projects/dlchoice/dlchoice/image_classification.py:26",
             "<module> at /data/projects/dlchoice/dlchoice/image_classification.py:35"
           ],
@@ -73,23 +77,27 @@
           "rules": [
             {
               "rule": {
-                "selector": "Selector()",
+                "selector": " AdamW",
                 "impl": "e686c7dc-9940-52c6-b820-79ec6930339a",
                 "vals": "<lambda>"
               },
-              "captures": {}
+              "captures": {},
+              "vals": {}
             },
             {
               "rule": {
-                "selector": "Selector(main)",
+                "selector": "main AdamW",
                 "impl": "e686c7dc-9940-52c6-b820-79ec6930339a",
                 "vals": "<lambda>"
               },
-              "captures": {}
+              "captures": {},
+              "vals": {
+                "lr": "0.005"
+              }
             }
           ],
           "stack_info": [
-            "__call__ at /data/projects/PyChoice/pychoice/funcs.py:169",
+            "__call__ at /data/projects/PyChoice/pychoice/funcs.py:168",
             "configure_optimizers at /data/projects/dlchoice/dlchoice/module.py:22",
             "_call_lightning_module_hook at /data/projects/dlchoice/.venv/lib/python3.13/site-packages/lightning/pytorch/trainer/call.py:177",
             "_init_optimizers_and_lr_schedulers at /data/projects/dlchoice/.venv/lib/python3.13/site-packages/lightning/pytorch/core/optimizer.py:180",
@@ -100,12 +108,12 @@
             "_call_and_handle_interrupt at /data/projects/dlchoice/.venv/lib/python3.13/site-packages/lightning/pytorch/trainer/call.py:49",
             "fit at /data/projects/dlchoice/.venv/lib/python3.13/site-packages/lightning/pytorch/trainer/trainer.py:561",
             "train at /data/projects/dlchoice/dlchoice/train.py:153",
-            "__call__ at /data/projects/PyChoice/pychoice/funcs.py:175",
+            "__call__ at /data/projects/PyChoice/pychoice/funcs.py:174",
             "main at /data/projects/dlchoice/dlchoice/image_classification.py:26",
             "<module> at /data/projects/dlchoice/dlchoice/image_classification.py:35"
           ],
           "args": [
-            "<generator object Module.parameters at 0x7f0110316a40>"
+            "<generator object Module.parameters at 0x7f3b3a62e960>"
           ],
           "kwargs": {},
           "choice_kwargs": {
@@ -125,7 +133,7 @@
         "defaults": {}
       },
       "funcs": {
-        "CrossEntropyLoss": {
+        "b5bf22ed-966e-5d27-9840-d4d349feea56": {
           "id": "b5bf22ed-966e-5d27-9840-d4d349feea56",
           "func": "CrossEntropyLoss",
           "defaults": {
@@ -140,7 +148,7 @@
       },
       "rules": [
         {
-          "selector": "Selector(main)",
+          "selector": "main CrossEntropyLoss",
           "impl": "b5bf22ed-966e-5d27-9840-d4d349feea56",
           "vals": "<lambda>"
         }
@@ -156,7 +164,7 @@
         }
       },
       "funcs": {
-        "AdamW": {
+        "e686c7dc-9940-52c6-b820-79ec6930339a": {
           "id": "e686c7dc-9940-52c6-b820-79ec6930339a",
           "func": "AdamW",
           "defaults": {
@@ -171,12 +179,12 @@
       },
       "rules": [
         {
-          "selector": "Selector()",
+          "selector": " AdamW",
           "impl": "e686c7dc-9940-52c6-b820-79ec6930339a",
           "vals": "<lambda>"
         },
         {
-          "selector": "Selector(main)",
+          "selector": "main AdamW",
           "impl": "e686c7dc-9940-52c6-b820-79ec6930339a",
           "vals": "<lambda>"
         }
@@ -233,7 +241,7 @@
       "funcs": {},
       "rules": [
         {
-          "selector": "Selector(main)",
+          "selector": "main ChoiceTrainer",
           "impl": "1404ba02-c74f-5c0d-97f2-63c458a9f7b3",
           "vals": "<lambda>"
         }

@@ -40,9 +40,9 @@ function App() {
   const renderTraceItems = () => (
     <Box>
       {data.items.length > 0 ? (
-        <TraceItems 
-          items={data.items} 
-          registry={data.registry} 
+        <TraceItems
+          items={data.items}
+          registry={data.registry}
           onNavigateToRegistry={navigateToRegistryEntry}
         />
       ) : (
@@ -60,8 +60,8 @@ function App() {
   )
 
   const renderRegistry = () => (
-    <Registry 
-      registry={data.registry} 
+    <Registry
+      registry={data.registry}
       highlightedEntryId={highlightedEntryId}
       onClearHighlight={() => navigate('/registry')}
     />

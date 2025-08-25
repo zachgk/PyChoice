@@ -60,3 +60,6 @@ class ChoiceFuncImplementation:
 
     def __call__(self, rules: list[MatchedRule], args: tuple[Any, ...], kwargs: dict[str, Any]) -> Any:
         return self.func(*args, **self.choice_kwargs(rules, args, kwargs))
+
+    def __str__(self) -> str:
+        return self.func.__name__

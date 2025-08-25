@@ -29,12 +29,12 @@ interface TreeNode {
 
 function TraceDetails(props: { traceItem: TraceItemData | null; registry: Record<string, ChoiceFunction>; onNavigateToRegistry?: (entryId: string) => void }) {
   const { traceItem, registry, onNavigateToRegistry } = props;
-  
+
   // Helper function to format function values by stripping newlines and truncating to at most 30 characters
   const formatFunctionValue = (value: string, maxLength: number = 30): string => {
     // Strip newline characters and replace with spaces
     const cleanedValue = value.replace(/\n/g, ' ');
-    
+
     if (cleanedValue.length <= maxLength) {
       return cleanedValue;
     }
@@ -44,19 +44,19 @@ function TraceDetails(props: { traceItem: TraceItemData | null; registry: Record
   // Helper function to format function call
   const formatFunctionCall = (funcName: string, args: string[], kwargs: Record<string, string>): string => {
     let callStr = `${funcName}(`;
-    
+
     // Add positional arguments with formatting
     const argParts = [];
     if (args.length > 0) {
       argParts.push(...args.map(arg => formatFunctionValue(arg)));
     }
-    
+
     // Add keyword arguments with formatting
     const kwargEntries = Object.entries(kwargs);
     if (kwargEntries.length > 0) {
       argParts.push(...kwargEntries.map(([key, value]) => `${key}=${formatFunctionValue(value)}`));
     }
-    
+
     // Join arguments with proper formatting
     if (argParts.length > 0) {
       if (argParts.length === 1) {
@@ -65,11 +65,11 @@ function TraceDetails(props: { traceItem: TraceItemData | null; registry: Record
         callStr += '\n  ' + argParts.join(',\n  ') + '\n';
       }
     }
-    
+
     callStr += ')';
     return callStr;
   };
-  
+
   if (!traceItem) {
     return (
       <Box p={6} textAlign="center" color="gray.500">
@@ -79,8 +79,8 @@ function TraceDetails(props: { traceItem: TraceItemData | null; registry: Record
   }
 
   const entry = registry[traceItem.func];
-  const impl = entry.funcs[traceItem.impl] || entry.interface; 
-  
+  const impl = entry.funcs[traceItem.impl] || entry.interface;
+
   const defRule: MatchedRule = {
     rule: {selector: '<defaults>', impl: impl.func, vals: ''},
     captures: {}};
@@ -268,9 +268,9 @@ function TraceItems(props: TraceItemsProps) {
             <Box p={3} borderBottom="1px" borderColor="gray.200" bg="gray.50">
               <Text fontWeight="semibold" fontSize="sm">Function Details</Text>
             </Box>
-            <TraceDetails 
-              traceItem={selectedNode ? selectedNode.data : null} 
-              registry={props.registry} 
+            <TraceDetails
+              traceItem={selectedNode ? selectedNode.data : null}
+              registry={props.registry}
               onNavigateToRegistry={props.onNavigateToRegistry}
             />
           </Box>

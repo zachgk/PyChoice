@@ -53,7 +53,7 @@ function ChoiceFuncImplementationDisplay({ impl, name }: { impl: ChoiceFuncImple
 
 function Registry(props: RegistryProps) {
     const { registry, highlightedEntryId, onClearHighlight } = props;
-    
+
     return (
         <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)", lg: "repeat(3, 1fr)" }} gap={6}>
             {Object.entries(registry).map(([key, entry]) => {
@@ -103,10 +103,10 @@ function Registry(props: RegistryProps) {
                     <Text fontWeight="semibold" mb={2}>Functions:</Text>
                     <VStack align="start" gap={2}>
                         {Object.entries(entry.funcs).map(([funcName, funcImpl]) => (
-                            <ChoiceFuncImplementationDisplay 
-                                key={funcName} 
-                                impl={funcImpl} 
-                                name={funcName} 
+                            <ChoiceFuncImplementationDisplay
+                                key={funcName}
+                                impl={funcImpl}
+                                name={funcName}
                             />
                         ))}
                         {Object.keys(entry.funcs).length === 0 && (

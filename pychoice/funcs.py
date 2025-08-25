@@ -6,7 +6,7 @@ import io
 import json
 from functools import cmp_to_key
 from typing import Any, Callable, TypeVar, cast
-from uuid import uuid5
+from uuid import UUID, uuid5
 
 from .args import UUID_NAMESPACE, ChoiceFuncImplementation, MatchedRule, Rule, RuleVals
 from .selector import SEL, OptStackFrame, Selector
@@ -128,14 +128,14 @@ class ChoiceFunction:
     def __init__(self, interface: ChoiceFuncImplementation) -> None:
         self.id = uuid5(UUID_NAMESPACE, f"{interface.func.__module__}.{interface.func.__name__}")
         self.interface: ChoiceFuncImplementation = interface
-        self.funcs: dict[str, ChoiceFuncImplementation] = {}
+        self.funcs: dict[UUID, ChoiceFuncImplementation] = {}
         self.rules: list[Rule] = []
 
     def _add_func(self, f: Callable[..., Any], func: ChoiceFuncImplementation) -> None:
-        self.funcs[f.__name__] = func
+        self.funcs[func.id] = func
 
     def _add_rule(self, selector: SEL, impl: ChoiceFuncImplementation, vals: RuleVals) -> None:
-        self.rules.append(Rule(Selector(selector), impl, vals))
+        self.rules.append(Rule(Selector(selector, str(impl)), impl, vals))
 
     def _sorted_selectors(self, stack_info: OptStackFrame = None) -> list[MatchedRule]:
         if not self.rules:
@@ -255,7 +255,7 @@ class ChoiceJSONEncoder(json.JSONEncoder):
             return {
                 "id": str(obj.id),
                 "interface": obj.interface,
-                "funcs": obj.funcs,
+                "funcs": {str(k): v for k, v in obj.funcs.items()},
                 "rules": obj.rules,
             }
         elif isinstance(obj, ChoiceFuncImplementation):

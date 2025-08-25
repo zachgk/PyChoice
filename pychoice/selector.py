@@ -101,8 +101,9 @@ class MatchSelectorItem(SelectorItem):
 
 
 class Selector:
-    def __init__(self, items: SEL) -> None:
+    def __init__(self, items: SEL, impl: str = "") -> None:
         self.items: list[SelectorItem] = []
+        self.impl = impl
         for i in items:
             if isinstance(i, tuple) and len(i) == 2 and isinstance(i[0], type) and isinstance(i[1], str):
                 self.items.append(ClassSelectorItem(i[0], i[1]))
@@ -114,7 +115,7 @@ class Selector:
                 raise InvalidSelectorItem(i)
 
     def __str__(self) -> str:
-        return " ".join(str(i) for i in self.items)
+        return f"{' '.join(str(i) for i in self.items)} {self.impl}"
 
     # Returns the indices of selectors in sorted order with worst matching at 0 and best matching at -1.
     # Non-matching are not returned
