@@ -38,7 +38,7 @@ But let's say that the arguments which you (optionally) add to your choice funct
 Think of the original signature like a function interface. Then you can have multiple implementations of the interface and use choice rules to control which implementation gets used. It would look like:
 
 ```python
-@choice.func(implements=greet, args=["greeting", "title"])
+@choice.impl(implements=greet, args=["greeting", "title"])
 def greet_with_title(name: str, greeting="Hello", title="user"):
     return f"{greeting} {name} the {title}"
 

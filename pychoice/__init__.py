@@ -1,5 +1,5 @@
 from .args import MissingChoiceArg
-from .funcs import Trace, cap_rule, def_rule, func, registry, rule, trace_status, wrap
+from .funcs import Trace, cap_rule, def_rule, func, impl, registry, rule, trace_status, wrap
 from .selector import Match
 
 
@@ -17,6 +17,7 @@ __all__ = [
     "cap_rule",
     "def_rule",
     "func",
+    "impl",
     "registry",
     "rule",
     "trace_start",

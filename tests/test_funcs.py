@@ -8,12 +8,12 @@ def foo() -> str:
     return "foo"
 
 
-@choice.func(implements=foo)
+@choice.impl(implements=foo)
 def bar() -> str:
     return "bar"
 
 
-@choice.func(implements=foo)
+@choice.impl(implements=foo)
 def baz() -> str:
     return "baz"
 

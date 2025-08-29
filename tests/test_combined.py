@@ -8,7 +8,7 @@ def cfoo() -> str:
     return "foo"
 
 
-@choice.func(implements=cfoo, args=["s"])
+@choice.impl(implements=cfoo, args=["s"])
 def cbar(s="bar") -> str:
     return s
 

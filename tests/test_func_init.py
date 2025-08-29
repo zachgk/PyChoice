@@ -20,7 +20,7 @@ def test_foo():
 # Using a class as an implementation
 
 
-@choice.func(implements=cfoo)
+@choice.impl(implements=cfoo)
 class Bar(Foo):
     def foo(self) -> str:
         return "bar"
@@ -33,7 +33,7 @@ def test_bar():
 choice.rule([test_bar, cfoo], Bar)
 
 
-@choice.func(implements=cfoo, args=["arg"])
+@choice.impl(implements=cfoo, args=["arg"])
 class ArgBar(Foo):
     def __init__(self, arg: str):
         self.arg = arg

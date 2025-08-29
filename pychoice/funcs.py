@@ -220,33 +220,41 @@ def def_rule(selector: SEL, impl: ChoiceFunction | ChoiceFuncImplementation) -> 
     return decorator_args
 
 
-def func(implements: ChoiceFunction | None = None, args: list[str] | None = None) -> Callable[[F], F]:
+def func(args: list[str] | None = None) -> Callable[[F], ChoiceFunction]:
+    if args is None:
+        args = []
+
+    def decorator_args(func: F) -> ChoiceFunction:
+        func_args = ChoiceFuncImplementation(args, func)
+        # Choice interface
+
+        # Add to registry
+        reg = ChoiceFunction(func_args)
+        registry.append(reg)
+
+        # Return wrapper
+        return cast(ChoiceFunction, functools.wraps(func)(reg))
+
+    return decorator_args
+
+
+def impl(implements: ChoiceFunction, args: list[str] | None = None) -> Callable[[F], F]:
     if args is None:
         args = []
 
     def decorator_args(func: F) -> F:
         func_args = ChoiceFuncImplementation(args, func)
-        if implements is None:
-            # Choice interface
+        # Choice implementation
 
-            # Add to registry
-            reg = ChoiceFunction(func_args)
-            registry.append(reg)
-
-            # Return wrapper
-            return cast(F, functools.wraps(func)(reg))
-        else:
-            # Choice implementation
-
-            # Add to registry
-            implements._add_func(func, func_args)
-            return cast(F, functools.wraps(func)(func_args))
+        # Add to registry
+        implements._add_func(func, func_args)
+        return cast(F, functools.wraps(func)(func_args))
 
     return decorator_args
 
 
-def wrap(f: F, implements: ChoiceFunction | None = None, args: list[str] | None = None) -> F:
-    return func(implements=implements, args=args)(f)
+def wrap(f: F, implements: ChoiceFunction, args: list[str] | None = None) -> F:
+    return impl(implements, args=args)(f)
 
 
 class ChoiceJSONEncoder(json.JSONEncoder):
