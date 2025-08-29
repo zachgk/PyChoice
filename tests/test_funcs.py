@@ -51,6 +51,20 @@ choice.rule([wrap_foo, foo], bar)
 choice.rule([test_override_override, wrap_foo, foo], baz)
 
 
+def buzz() -> str:
+    return "buzz"
+
+
+wrap_buzz = choice.wrap(buzz, implements=foo)
+
+
+def test_wrap():
+    assert foo() == "buzz"
+
+
+choice.rule([test_wrap, foo], wrap_buzz)
+
+
 class TestClasses:
     def test_class_override(self):
         assert foo() == "bar"

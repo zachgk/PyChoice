@@ -245,6 +245,10 @@ def func(implements: ChoiceFunction | None = None, args: list[str] | None = None
     return decorator_args
 
 
+def wrap(f: F, implements: ChoiceFunction | None = None, args: list[str] | None = None) -> F:
+    return func(implements=implements, args=args)(f)
+
+
 class ChoiceJSONEncoder(json.JSONEncoder):
     def default(self, obj: Any) -> Any:
         if isinstance(obj, TraceItem):
