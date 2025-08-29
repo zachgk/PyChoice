@@ -109,7 +109,7 @@ class Selector:
                 self.items.append(ClassSelectorItem(i[0], i[1]))
             elif isinstance(i, Match):
                 self.items.append(MatchSelectorItem(i.func, i.args))
-            elif callable(i):
+            elif callable(i) and hasattr(i, "__code__"):
                 self.items.append(FunctionSelectorItem(i))
             else:
                 raise InvalidSelectorItem(i)

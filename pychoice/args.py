@@ -33,10 +33,10 @@ class MissingChoiceArg(Exception):
         super().__init__(msg)
 
 
-class ChoiceFuncImplementation:
+class ChoiceFuncImplementation[O]:
     def __init__(self, choice_args: list[str], func: F):
         self.id = uuid5(UUID_NAMESPACE, f"{func.__module__}.{func.__name__}")
-        self.func = func
+        self.func: Callable[..., O] = func
 
         # Collect args
         sig = inspect.signature(func)
@@ -58,7 +58,7 @@ class ChoiceFuncImplementation:
         new_kwargs.update(kwargs)
         return new_kwargs
 
-    def __call__(self, rules: list[MatchedRule], args: tuple[Any, ...], kwargs: dict[str, Any]) -> Any:
+    def __call__(self, rules: list[MatchedRule], args: tuple[Any, ...], kwargs: dict[str, Any]) -> O:
         return self.func(*args, **self.choice_kwargs(rules, args, kwargs))
 
     def __str__(self) -> str:

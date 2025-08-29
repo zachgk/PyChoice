@@ -124,17 +124,17 @@ class MismatchedTrace(RuntimeError):
         super().__init__("Mismatched choice Trace end call")
 
 
-class ChoiceFunction:
-    def __init__(self, interface: ChoiceFuncImplementation) -> None:
+class ChoiceFunction[O]:
+    def __init__(self, interface: ChoiceFuncImplementation[O]) -> None:
         self.id = uuid5(UUID_NAMESPACE, f"{interface.func.__module__}.{interface.func.__name__}")
-        self.interface: ChoiceFuncImplementation = interface
-        self.funcs: dict[UUID, ChoiceFuncImplementation] = {}
+        self.interface: ChoiceFuncImplementation[O] = interface
+        self.funcs: dict[UUID, ChoiceFuncImplementation[O]] = {}
         self.rules: list[Rule] = []
 
-    def _add_func(self, f: Callable[..., Any], func: ChoiceFuncImplementation) -> None:
+    def _add_func(self, f: Callable[..., Any], func: ChoiceFuncImplementation[O]) -> None:
         self.funcs[func.id] = func
 
-    def _add_rule(self, selector: SEL, impl: ChoiceFuncImplementation, vals: RuleVals) -> None:
+    def _add_rule(self, selector: SEL, impl: ChoiceFuncImplementation[O], vals: RuleVals) -> None:
         self.rules.append(Rule(Selector(selector, str(impl)), impl, vals))
 
     def _sorted_selectors(self, stack_info: OptStackFrame = None) -> list[MatchedRule]:
@@ -164,7 +164,7 @@ class ChoiceFunction:
 
         return rules
 
-    def __call__(self, *args: Any, **kwargs: Any) -> Any:
+    def __call__(self, *args: Any, **kwargs: Any) -> O:
         stack_info = inspect.stack()
         rules = self._sorted_selectors(stack_info)
         impl = rules[-1].rule.impl if rules else self.interface
@@ -220,40 +220,44 @@ def def_rule(selector: SEL, impl: ChoiceFunction | ChoiceFuncImplementation) -> 
     return decorator_args
 
 
-def func(args: list[str] | None = None) -> Callable[[F], ChoiceFunction]:
+def func[O](args: list[str] | None = None) -> Callable[[Callable[..., O]], ChoiceFunction[O]]:
     if args is None:
         args = []
 
-    def decorator_args(func: F) -> ChoiceFunction:
-        func_args = ChoiceFuncImplementation(args, func)
+    def decorator_args(func: F) -> ChoiceFunction[O]:
+        func_args = ChoiceFuncImplementation[O](args, func)
         # Choice interface
 
         # Add to registry
-        reg = ChoiceFunction(func_args)
+        reg = ChoiceFunction[O](func_args)
         registry.append(reg)
 
         # Return wrapper
-        return cast(ChoiceFunction, functools.wraps(func)(reg))
+        return cast(ChoiceFunction[O], functools.wraps(func)(reg))
 
     return decorator_args
 
 
-def impl(implements: ChoiceFunction, args: list[str] | None = None) -> Callable[[F], F]:
+def impl[O](
+    implements: ChoiceFunction[O], args: list[str] | None = None
+) -> Callable[[Callable[..., O]], ChoiceFuncImplementation[O]]:
     if args is None:
         args = []
 
-    def decorator_args(func: F) -> F:
-        func_args = ChoiceFuncImplementation(args, func)
+    def decorator_args(func: F) -> ChoiceFuncImplementation[O]:
+        func_args = ChoiceFuncImplementation[O](args, func)
         # Choice implementation
 
         # Add to registry
         implements._add_func(func, func_args)
-        return cast(F, functools.wraps(func)(func_args))
+        return cast(ChoiceFuncImplementation[O], functools.wraps(func)(func_args))
 
     return decorator_args
 
 
-def wrap(f: F, implements: ChoiceFunction, args: list[str] | None = None) -> F:
+def wrap[O](
+    f: Callable[..., O], implements: ChoiceFunction[O], args: list[str] | None = None
+) -> ChoiceFuncImplementation[O]:
     return impl(implements, args=args)(f)
 
 
