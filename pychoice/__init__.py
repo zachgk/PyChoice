@@ -1,6 +1,6 @@
 from .args import MissingChoiceArg
 from .funcs import Trace, cap_rule, def_rule, func, impl, registry, rule, trace_status, wrap
-from .selector import Match
+from .selector import ChoiceContext, Match
 
 
 def trace_start() -> None:
@@ -12,6 +12,7 @@ def trace_stop() -> Trace:
 
 
 __all__ = [
+    "ChoiceContext",
     "Match",
     "MissingChoiceArg",
     "cap_rule",

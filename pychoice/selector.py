@@ -1,11 +1,27 @@
 from __future__ import annotations
 
 import inspect
+from contextvars import ContextVar
 from functools import cmp_to_key
+from types import TracebackType
 from typing import Any, Callable, NamedTuple, Optional, Union
 
+
+class ChoiceContext:
+    active = ContextVar("active", default=False)
+
+    def __enter__(self) -> None:
+        self.active.set(True)
+
+    def __exit__(
+        self, exc_type: BaseException | None, exc_val: BaseException | None, exc_tb: TracebackType | None
+    ) -> bool | None:
+        self.active.set(False)
+        return None
+
+
 SEL_I_CLS = tuple[type, str]
-SEL_I = Union[Callable[..., Any], SEL_I_CLS]
+SEL_I = Union[Callable[..., Any], SEL_I_CLS, ChoiceContext]
 SEL = list[Callable[..., Any]]
 StackFrame = list[inspect.FrameInfo]
 OptStackFrame = Optional[StackFrame]
@@ -39,6 +55,20 @@ class SelectorItem:
         return {}
 
 
+class ChoiceContextSelectorItem(SelectorItem):
+    def __init__(self, context: type[ChoiceContext]):
+        self.context = context
+
+    def __str__(self) -> str:
+        return f"ChoiceContext(active={self.context.active.get()})"
+
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, ChoiceContextSelectorItem) and self.context == other.context
+
+    def matches(self, frame_info: inspect.FrameInfo) -> tuple[bool, dict[str, Any]]:
+        return self.context.active.get(), {}
+
+
 class FunctionSelectorItem(SelectorItem):
     def __init__(self, func: Callable[..., Any]):
         self.func = func
@@ -64,6 +94,8 @@ class CallableSelectorItem(SelectorItem):
         return isinstance(other, CallableSelectorItem) and self.func == other.func
 
     def matches(self, frame_info: inspect.FrameInfo) -> tuple[bool, dict[str, Any]]:
+        if not hasattr(self.func.__call__, "__code__"):  # type: ignore[operator]
+            return False, {}
         if self.func.__call__.__code__ != frame_info.frame.f_code:  # type: ignore[operator]
             return False, {}
         if hasattr(self.func, "__class__") and self.func != frame_info.frame.f_locals.get("self", None):
@@ -123,7 +155,9 @@ class Selector:
         self.items: list[SelectorItem] = []
         self.impl = impl
         for i in items:
-            if isinstance(i, tuple) and len(i) == 2 and isinstance(i[0], type) and isinstance(i[1], str):
+            if isinstance(i, type) and issubclass(i, ChoiceContext):
+                self.items.append(ChoiceContextSelectorItem(i))
+            elif isinstance(i, tuple) and len(i) == 2 and isinstance(i[0], type) and isinstance(i[1], str):
                 self.items.append(ClassSelectorItem(i[0], i[1]))
             elif isinstance(i, Match):
                 self.items.append(MatchSelectorItem(i.func, i.args))

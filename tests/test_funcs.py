@@ -107,3 +107,17 @@ class TestChildClass(ParentClass):
 
 
 choice.rule([(ParentClass, "test_child_class_override"), foo], bar)
+
+# Test with Context
+
+
+class MyChoiceContext(choice.ChoiceContext):
+    pass
+
+
+def test_context():
+    with MyChoiceContext():
+        assert foo() == "bar"
+
+
+choice.rule([MyChoiceContext, foo], bar)
