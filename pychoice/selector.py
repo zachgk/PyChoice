@@ -53,6 +53,24 @@ class FunctionSelectorItem(SelectorItem):
         return self.func.__code__ == frame_info.frame.f_code, {}
 
 
+class CallableSelectorItem(SelectorItem):
+    def __init__(self, func: Callable[..., Any]):
+        self.func: Callable[..., Any] = func
+
+    def __str__(self) -> str:
+        return self.func.__name__
+
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, CallableSelectorItem) and self.func == other.func
+
+    def matches(self, frame_info: inspect.FrameInfo) -> tuple[bool, dict[str, Any]]:
+        if self.func.__call__.__code__ != frame_info.frame.f_code:  # type: ignore[operator]
+            return False, {}
+        if hasattr(self.func, "__class__") and self.func != frame_info.frame.f_locals.get("self", None):
+            return False, {}
+        return True, {}
+
+
 class ClassSelectorItem(SelectorItem):
     def __init__(self, cls: type, func_name: str):
         self.cls = cls
@@ -111,6 +129,8 @@ class Selector:
                 self.items.append(MatchSelectorItem(i.func, i.args))
             elif callable(i) and hasattr(i, "__code__"):
                 self.items.append(FunctionSelectorItem(i))
+            elif callable(i):
+                self.items.append(CallableSelectorItem(i))
             else:
                 raise InvalidSelectorItem(i)
 

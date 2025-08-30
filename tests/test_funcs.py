@@ -31,12 +31,16 @@ def test_bar():
 
 choice.rule([test_bar, foo], bar)
 
+# Test with new implementation
+
 
 def test_baz():
     assert foo() == "baz"
 
 
 choice.rule([test_baz, foo], baz)
+
+# Test with wrapper function and override
 
 
 def wrap_foo():
@@ -49,6 +53,22 @@ def test_override_override():
 
 choice.rule([wrap_foo, foo], bar)
 choice.rule([test_override_override, wrap_foo, foo], baz)
+
+# Test with wrapper choice function
+
+
+@choice.func()
+def choice_wrap_foo():
+    return foo()
+
+
+def test_choice_wrap_foo():
+    assert choice_wrap_foo() == "bar"
+
+
+choice.rule([choice_wrap_foo, foo], bar)
+
+# Test with choice.wrap
 
 
 def buzz() -> str:
@@ -64,6 +84,8 @@ def test_wrap():
 
 choice.rule([test_wrap, foo], wrap_buzz)
 
+# Test with class selector
+
 
 class TestClasses:
     def test_class_override(self):
@@ -71,6 +93,8 @@ class TestClasses:
 
 
 choice.rule([(TestClasses, "test_class_override"), foo], bar)
+
+# Test with class selector and inheritance
 
 
 class ParentClass:
