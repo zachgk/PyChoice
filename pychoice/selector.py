@@ -50,6 +50,11 @@ class InvalidSelectorItem(TypeError):
         super().__init__(msg)
 
 
+class NonFunction(TypeError):
+    def __init__(self) -> None:
+        super().__init__("Expected a choice function for the final term in a selector")
+
+
 class ChoiceContextSelectorItem(SelectorItem):
     def __init__(self, context: type[ChoiceContext]):
         self.context = context
@@ -125,18 +130,18 @@ class ClassSelectorItem(SelectorItem):
 
 
 class Match(SelectorItem):
-    def __init__(self, func: Callable[..., Any], match_args: list[str]):
-        self.func = func
+    def __init__(self, func: SEL_I, match_args: list[str]):
+        self.item = Selector.new_item(func)
         self.match_args = match_args
 
     def __str__(self) -> str:
-        return f"{self.func.__name__}({', '.join(self.match_args)})"
+        return str(self.item)
 
     def __eq__(self, other: object) -> bool:
-        return isinstance(other, Match) and self.func == other.func and self.match_args == other.match_args
+        return isinstance(other, Match) and self.item == other.item and self.match_args == other.match_args
 
     def matches(self, frame_info: inspect.FrameInfo) -> tuple[bool, dict[str, Any]]:
-        if self.func.__code__ != frame_info.frame.f_code:
+        if not self.item.matches(frame_info)[0]:
             return False, {}
         return True, self.capture(frame_info)
 
@@ -150,21 +155,38 @@ class Selector:
         self.items: list[SelectorItem] = []
         self.impl = impl
         for i in items:
-            if isinstance(i, type) and issubclass(i, ChoiceContext):
-                self.items.append(ChoiceContextSelectorItem(i))
-            elif isinstance(i, tuple) and len(i) == 2 and isinstance(i[0], type) and isinstance(i[1], str):
-                self.items.append(ClassSelectorItem(i[0], i[1]))
-            elif isinstance(i, SelectorItem):
-                self.items.append(i)
-            elif callable(i) and hasattr(i, "__code__"):
-                self.items.append(FunctionSelectorItem(i))
-            elif callable(i):
-                self.items.append(CallableSelectorItem(i))
-            else:
-                raise InvalidSelectorItem(i)
+            self.items.append(Selector.new_item(i))
 
     def __str__(self) -> str:
-        return f"{' '.join(str(i) for i in self.items)} {self.impl}"
+        return f"{' '.join(str(i) for i in self.items)} => {self.impl}"
+
+    def choice_function(self) -> Any:
+        f = self.items[-1]
+        if isinstance(f, CallableSelectorItem):
+            return f.func
+        elif isinstance(f, Match):
+            f2 = f.item
+            if isinstance(f2, CallableSelectorItem):
+                return f2.func
+            else:
+                raise NonFunction()
+        else:
+            raise NonFunction()
+
+    @staticmethod
+    def new_item(item: SEL_I) -> SelectorItem:
+        if isinstance(item, type) and issubclass(item, ChoiceContext):
+            return ChoiceContextSelectorItem(item)
+        elif isinstance(item, tuple) and len(item) == 2 and isinstance(item[0], type) and isinstance(item[1], str):
+            return ClassSelectorItem(item[0], item[1])
+        elif isinstance(item, SelectorItem):
+            return item
+        elif callable(item) and hasattr(item, "__code__"):
+            return FunctionSelectorItem(item)
+        elif callable(item):
+            return CallableSelectorItem(item)
+        else:
+            raise InvalidSelectorItem(item)
 
     # Returns the indices of selectors in sorted order with worst matching at 0 and best matching at -1.
     # Non-matching are not returned

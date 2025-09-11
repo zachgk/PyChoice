@@ -134,8 +134,8 @@ class ChoiceFunction[O]:
     def _add_func(self, f: Callable[..., Any], func: ChoiceFuncImplementation[O]) -> None:
         self.funcs[func.id] = func
 
-    def _add_rule(self, selector: SEL, impl: ChoiceFuncImplementation[O], vals: RuleVals) -> None:
-        self.rules.append(Rule(Selector(selector, str(impl)), impl, vals))
+    def _add_rule(self, selector: Selector, impl: ChoiceFuncImplementation[O], vals: RuleVals) -> None:
+        self.rules.append(Rule(selector, impl, vals))
 
     def _sorted_selectors(self, stack_info: OptStackFrame = None) -> list[MatchedRule]:
         if not self.rules:
@@ -187,8 +187,13 @@ def rule(selector: SEL, impl: ChoiceFunction | ChoiceFuncImplementation, **kwarg
     else:
         raise NonRule()
     # Choose function implementation
-    choice_fun = cast(ChoiceFunction, selector[-1])
-    choice_fun._add_rule(selector[:-1], impl, lambda _: kwargs)
+    sel = Selector(selector, str(impl))
+    choice_fun = sel.choice_function()
+    if isinstance(choice_fun, ChoiceFunction):
+        choice_fun = cast(ChoiceFunction, choice_fun)
+    else:
+        raise TypeError()
+    choice_fun._add_rule(sel, impl, lambda _: kwargs)
 
 
 def cap_rule(selector: SEL, impl: ChoiceFunction | ChoiceFuncImplementation, vals: RuleVals) -> None:
@@ -199,8 +204,13 @@ def cap_rule(selector: SEL, impl: ChoiceFunction | ChoiceFuncImplementation, val
     else:
         raise NonRule()
     # Choose function implementation
-    choice_fun = cast(ChoiceFunction, selector[-1])
-    choice_fun._add_rule(selector[:-1], impl, vals)
+    sel = Selector(selector, str(impl))
+    choice_fun = sel.choice_function()
+    if isinstance(choice_fun, ChoiceFunction):
+        choice_fun = cast(ChoiceFunction, choice_fun)
+    else:
+        raise TypeError()
+    choice_fun._add_rule(sel, impl, vals)
 
 
 def def_rule(selector: SEL, impl: ChoiceFunction | ChoiceFuncImplementation) -> Any:
@@ -213,8 +223,13 @@ def def_rule(selector: SEL, impl: ChoiceFunction | ChoiceFuncImplementation) -> 
 
     def decorator_args(func: RuleVals) -> RuleVals:
         # Choose function implementation
-        choice_fun = cast(ChoiceFunction, selector[-1])
-        choice_fun._add_rule(selector[:-1], impl, func)
+        sel = Selector(selector, str(impl))
+        choice_fun = sel.choice_function()
+        if isinstance(choice_fun, ChoiceFunction):
+            choice_fun = cast(ChoiceFunction, choice_fun)
+        else:
+            raise TypeError()
+        choice_fun._add_rule(sel, impl, func)
         return func
 
     return decorator_args

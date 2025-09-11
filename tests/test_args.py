@@ -74,3 +74,10 @@ def test_def_rule():
 @choice.def_rule([test_def_rule, choice.Match(wrap_greet, ["name"]), greet], greet)
 def rule_test_def_rule(captures):
     return {"greeting": f"Greetings {captures['name']}"}
+
+
+def test_cap_match():
+    assert greet("dog") == "What's up dog"
+
+
+choice.cap_rule([test_cap_match, choice.Match(greet, ["name"])], greet, lambda c: {"greeting": "What's up"})
