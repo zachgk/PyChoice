@@ -65,7 +65,7 @@ def test_cap():
 choice.def_rule([test_cap, choice.Match(wrap_greet, ["name"]), greet])(
     lambda c: (greet, {"greeting": f"Greetings {c['name']}"})
 )
-choice.def_rule([test_cap, greet])(lambda c: None) # Also test None return
+choice.def_rule([test_cap, greet])(lambda c: None)  # Also test None return
 
 
 def test_def_rule():
@@ -74,6 +74,7 @@ def test_def_rule():
 
 @choice.def_rule([test_def_rule, choice.Match(wrap_greet, ["name"]), greet])
 def rule_test_def_rule(captures):
+    """Test defining a rule with a function."""
     return greet, {"greeting": f"Greetings {captures['name']}"}
 
 

@@ -134,8 +134,8 @@ class ChoiceFunction[O]:
     def _add_func(self, f: Callable[..., Any], func: ChoiceFuncImplementation[O]) -> None:
         self.funcs[func.id] = func
 
-    def _add_rule(self, selector: Selector, impl: ChoiceFuncImplementation[O] | None, vals: RuleVals) -> None:
-        self.rules.append(Rule(selector, impl, vals))
+    def _add_rule(self, rule: Rule) -> None:
+        self.rules.append(rule)
 
     def _sorted_selectors(self, stack_info: OptStackFrame = None) -> list[MatchedRule]:
         if not self.rules:
@@ -199,7 +199,7 @@ def rule(selector: SEL, impl: ChoiceFunction | ChoiceFuncImplementation, **kwarg
         choice_fun = cast(ChoiceFunction, choice_fun)
     else:
         raise TypeError()
-    choice_fun._add_rule(sel, impl, lambda _: (impl, kwargs))
+    choice_fun._add_rule(Rule(sel, impl, lambda _: (impl, kwargs)))
 
 
 def def_rule(selector: SEL) -> Any:
@@ -211,7 +211,7 @@ def def_rule(selector: SEL) -> Any:
             choice_fun = cast(ChoiceFunction, choice_fun)
         else:
             raise TypeError()
-        choice_fun._add_rule(sel, None, func)
+        choice_fun._add_rule(Rule(sel, None, func, inspect.getdoc(func)))
         return func
 
     return decorator_args
@@ -283,6 +283,7 @@ class ChoiceJSONEncoder(json.JSONEncoder):
             return {
                 "selector": str(obj.selector),
                 "impl": str(obj.impl.id if obj.impl is not None else None),
+                "doc": obj.doc,
             }
         elif isinstance(obj, MatchedRule):
             return {

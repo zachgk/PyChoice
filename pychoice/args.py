@@ -18,6 +18,7 @@ class Rule:
     selector: Selector
     impl: ChoiceFuncImplementation | None
     vals: RuleVals
+    doc: str | None = None
 
     def __str__(self) -> str:
         if self.impl is not None:
