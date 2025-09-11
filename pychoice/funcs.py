@@ -196,23 +196,6 @@ def rule(selector: SEL, impl: ChoiceFunction | ChoiceFuncImplementation, **kwarg
     choice_fun._add_rule(sel, impl, lambda _: kwargs)
 
 
-def cap_rule(selector: SEL, impl: ChoiceFunction | ChoiceFuncImplementation, vals: RuleVals) -> None:
-    if isinstance(impl, ChoiceFunction):
-        impl = impl.interface
-    elif isinstance(impl, ChoiceFuncImplementation):
-        pass
-    else:
-        raise NonRule()
-    # Choose function implementation
-    sel = Selector(selector, str(impl))
-    choice_fun = sel.choice_function()
-    if isinstance(choice_fun, ChoiceFunction):
-        choice_fun = cast(ChoiceFunction, choice_fun)
-    else:
-        raise TypeError()
-    choice_fun._add_rule(sel, impl, vals)
-
-
 def def_rule(selector: SEL, impl: ChoiceFunction | ChoiceFuncImplementation) -> Any:
     if isinstance(impl, ChoiceFunction):
         impl = impl.interface

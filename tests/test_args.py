@@ -62,8 +62,8 @@ def test_cap():
     assert wrap_greet("me") == "Greetings me me"
 
 
-choice.cap_rule(
-    [test_cap, choice.Match(wrap_greet, ["name"]), greet], greet, lambda c: {"greeting": f"Greetings {c['name']}"}
+choice.def_rule([test_cap, choice.Match(wrap_greet, ["name"]), greet], greet)(
+    lambda c: {"greeting": f"Greetings {c['name']}"}
 )
 
 
@@ -80,4 +80,4 @@ def test_cap_match():
     assert greet("dog") == "What's up dog"
 
 
-choice.cap_rule([test_cap_match, choice.Match(greet, ["name"])], greet, lambda c: {"greeting": "What's up"})
+choice.def_rule([test_cap_match, choice.Match(greet, ["name"])], greet)(lambda c: {"greeting": "What's up"})
