@@ -4,7 +4,7 @@ import inspect
 from contextvars import ContextVar
 from functools import cmp_to_key
 from types import TracebackType
-from typing import Any, Callable, NamedTuple, Optional, Union
+from typing import Any, Callable, Optional, Union
 
 
 class ChoiceContext:
@@ -18,24 +18,6 @@ class ChoiceContext:
     ) -> bool | None:
         self.active.set(False)
         return None
-
-
-SEL_I_CLS = tuple[type, str]
-SEL_I = Union[Callable[..., Any], SEL_I_CLS, ChoiceContext]
-SEL = list[Callable[..., Any]]
-StackFrame = list[inspect.FrameInfo]
-OptStackFrame = Optional[StackFrame]
-
-
-class InvalidSelectorItem(TypeError):
-    def __init__(self, item: SEL_I):
-        msg = f"Invalid selector item type: {type(item)} for {item}"
-        super().__init__(msg)
-
-
-class Match(NamedTuple):
-    func: Callable[..., Any]
-    args: list[str]
 
 
 class SelectorItem:
@@ -53,6 +35,19 @@ class SelectorItem:
 
     def capture(self, frame_info: inspect.FrameInfo) -> dict[str, Any]:
         return {}
+
+
+SEL_I_CLS = tuple[type, str]
+SEL_I = Union[Callable[..., Any], SEL_I_CLS, ChoiceContext, SelectorItem]
+SEL = list[Callable[..., Any]]
+StackFrame = list[inspect.FrameInfo]
+OptStackFrame = Optional[StackFrame]
+
+
+class InvalidSelectorItem(TypeError):
+    def __init__(self, item: SEL_I):
+        msg = f"Invalid selector item type: {type(item)} for {item}"
+        super().__init__(msg)
 
 
 class ChoiceContextSelectorItem(SelectorItem):
@@ -129,7 +124,7 @@ class ClassSelectorItem(SelectorItem):
         return False, {}
 
 
-class MatchSelectorItem(SelectorItem):
+class Match(SelectorItem):
     def __init__(self, func: Callable[..., Any], match_args: list[str]):
         self.func = func
         self.match_args = match_args
@@ -138,7 +133,7 @@ class MatchSelectorItem(SelectorItem):
         return f"{self.func.__name__}({', '.join(self.match_args)})"
 
     def __eq__(self, other: object) -> bool:
-        return isinstance(other, MatchSelectorItem) and self.func == other.func and self.match_args == other.match_args
+        return isinstance(other, Match) and self.func == other.func and self.match_args == other.match_args
 
     def matches(self, frame_info: inspect.FrameInfo) -> tuple[bool, dict[str, Any]]:
         if self.func.__code__ != frame_info.frame.f_code:
@@ -159,8 +154,8 @@ class Selector:
                 self.items.append(ChoiceContextSelectorItem(i))
             elif isinstance(i, tuple) and len(i) == 2 and isinstance(i[0], type) and isinstance(i[1], str):
                 self.items.append(ClassSelectorItem(i[0], i[1]))
-            elif isinstance(i, Match):
-                self.items.append(MatchSelectorItem(i.func, i.args))
+            elif isinstance(i, SelectorItem):
+                self.items.append(i)
             elif callable(i) and hasattr(i, "__code__"):
                 self.items.append(FunctionSelectorItem(i))
             elif callable(i):
