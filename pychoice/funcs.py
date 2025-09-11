@@ -36,7 +36,7 @@ class TraceItem:
 
     def print_item(self, sb: io.TextIOBase, indent: int = 0) -> None:
         prefix = " " * indent
-        rule_str = " -> ".join(f"{r.rule.selector} [{r.rule.impl.func.__name__}]" for r in self.rules) or "No rules"
+        rule_str = " -> ".join(str(r) for r in self.rules) or "No rules"
         sb.write(f"{prefix}{self.func.interface.func.__name__} [{self.impl.func.__name__}]")
         sb.write(f"{prefix}  Args: {self.args}, Kwargs: {self.kwargs}, Choice Kwargs: {self.choice_kwargs}")
         sb.write(f"{prefix}  Rules: {rule_str}")
@@ -134,7 +134,7 @@ class ChoiceFunction[O]:
     def _add_func(self, f: Callable[..., Any], func: ChoiceFuncImplementation[O]) -> None:
         self.funcs[func.id] = func
 
-    def _add_rule(self, selector: Selector, impl: ChoiceFuncImplementation[O], vals: RuleVals) -> None:
+    def _add_rule(self, selector: Selector, impl: ChoiceFuncImplementation[O] | None, vals: RuleVals) -> None:
         self.rules.append(Rule(selector, impl, vals))
 
     def _sorted_selectors(self, stack_info: OptStackFrame = None) -> list[MatchedRule]:
@@ -167,7 +167,13 @@ class ChoiceFunction[O]:
     def __call__(self, *args: Any, **kwargs: Any) -> O:
         stack_info = inspect.stack()
         rules = self._sorted_selectors(stack_info)
-        impl = rules[-1].rule.impl if rules else self.interface
+        impl = rules[-1].impl if rules else self.interface
+        if isinstance(impl, ChoiceFuncImplementation):
+            pass
+        elif isinstance(impl, ChoiceFunction):
+            impl = impl.interface
+        else:
+            raise NonRule()
 
         choice_kwargs = impl.choice_kwargs(rules, args, kwargs)
         trace_status.call_begin(TraceItem(self, impl, rules, stack_info, args, kwargs, choice_kwargs))
@@ -193,26 +199,19 @@ def rule(selector: SEL, impl: ChoiceFunction | ChoiceFuncImplementation, **kwarg
         choice_fun = cast(ChoiceFunction, choice_fun)
     else:
         raise TypeError()
-    choice_fun._add_rule(sel, impl, lambda _: kwargs)
+    choice_fun._add_rule(sel, impl, lambda _: (impl, kwargs))
 
 
-def def_rule(selector: SEL, impl: ChoiceFunction | ChoiceFuncImplementation) -> Any:
-    if isinstance(impl, ChoiceFunction):
-        impl = impl.interface
-    elif isinstance(impl, ChoiceFuncImplementation):
-        pass
-    else:
-        raise NonRule()
-
+def def_rule(selector: SEL) -> Any:
     def decorator_args(func: RuleVals) -> RuleVals:
         # Choose function implementation
-        sel = Selector(selector, str(impl))
+        sel = Selector(selector)
         choice_fun = sel.choice_function()
         if isinstance(choice_fun, ChoiceFunction):
             choice_fun = cast(ChoiceFunction, choice_fun)
         else:
             raise TypeError()
-        choice_fun._add_rule(sel, impl, func)
+        choice_fun._add_rule(sel, None, func)
         return func
 
     return decorator_args
@@ -283,7 +282,7 @@ class ChoiceJSONEncoder(json.JSONEncoder):
         elif isinstance(obj, Rule):
             return {
                 "selector": str(obj.selector),
-                "impl": str(obj.impl.id),
+                "impl": str(obj.impl.id if obj.impl is not None else None),
             }
         elif isinstance(obj, MatchedRule):
             return {

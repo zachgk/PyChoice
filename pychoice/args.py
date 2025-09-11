@@ -2,13 +2,13 @@ from __future__ import annotations
 
 import inspect
 from dataclasses import dataclass
-from typing import Any, Callable, TypeVar
+from typing import Any, Callable, Optional, TypeVar
 from uuid import UUID, uuid5
 
 from .selector import Selector
 
 F = TypeVar("F", bound=Callable[..., Any])
-type RuleVals = Callable[[dict[str, Any]], dict[str, Any]]
+type RuleVals = Callable[[dict[str, Any]], Optional[tuple[ChoiceFuncImplementation, dict[str, Any]]]]
 
 UUID_NAMESPACE = UUID("e7221d32-4940-4c49-b0e3-5f03446226ab")
 
@@ -16,15 +16,28 @@ UUID_NAMESPACE = UUID("e7221d32-4940-4c49-b0e3-5f03446226ab")
 @dataclass
 class Rule:
     selector: Selector
-    impl: ChoiceFuncImplementation
+    impl: ChoiceFuncImplementation | None
     vals: RuleVals
+
+    def __str__(self) -> str:
+        if self.impl is not None:
+            return f"{self.selector} [{self.impl.func.__name__}]"
+        else:
+            return f"{self.selector}"
 
 
 class MatchedRule:
     def __init__(self, rule: Rule, captures: dict[str, Any]) -> None:
         self.rule = rule
         self.captures = captures
-        self.vals = rule.vals(captures)
+
+        vals = rule.vals(captures)
+        if vals is not None:
+            self.impl: ChoiceFuncImplementation | None = vals[0]
+            self.vals: dict[str, Any] = vals[1]
+        else:
+            self.impl = None
+            self.vals = {}
 
 
 class MissingChoiceArg(Exception):

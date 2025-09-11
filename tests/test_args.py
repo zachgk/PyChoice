@@ -62,22 +62,23 @@ def test_cap():
     assert wrap_greet("me") == "Greetings me me"
 
 
-choice.def_rule([test_cap, choice.Match(wrap_greet, ["name"]), greet], greet)(
-    lambda c: {"greeting": f"Greetings {c['name']}"}
+choice.def_rule([test_cap, choice.Match(wrap_greet, ["name"]), greet])(
+    lambda c: (greet, {"greeting": f"Greetings {c['name']}"})
 )
+choice.def_rule([test_cap, greet])(lambda c: None) # Also test None return
 
 
 def test_def_rule():
     assert wrap_greet("me") == "Greetings me me"
 
 
-@choice.def_rule([test_def_rule, choice.Match(wrap_greet, ["name"]), greet], greet)
+@choice.def_rule([test_def_rule, choice.Match(wrap_greet, ["name"]), greet])
 def rule_test_def_rule(captures):
-    return {"greeting": f"Greetings {captures['name']}"}
+    return greet, {"greeting": f"Greetings {captures['name']}"}
 
 
 def test_cap_match():
     assert greet("dog") == "What's up dog"
 
 
-choice.def_rule([test_cap_match, choice.Match(greet, ["name"])], greet)(lambda c: {"greeting": "What's up"})
+choice.def_rule([test_cap_match, choice.Match(greet, ["name"])])(lambda c: (greet, {"greeting": "What's up"}))
