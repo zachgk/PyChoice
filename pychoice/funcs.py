@@ -9,9 +9,87 @@ from typing import Any, Callable, TypeVar, cast
 from uuid import UUID, uuid5
 
 from .args import UUID_NAMESPACE, ChoiceFuncImplementation, MatchedRule, Rule, RuleVals
-from .selector import SEL, OptStackFrame, Selector
+from .selector import (
+    SEL,
+    SEL_I,
+    CallableSelectorItem,
+    ChoiceContext,
+    ChoiceContextSelectorItem,
+    ClassSelectorItem,
+    FunctionSelectorItem,
+    InvalidSelectorItem,
+    OptStackFrame,
+    Selector,
+    SelectorItem,
+)
 
 F = TypeVar("F", bound=Callable[..., Any])
+
+
+class Match(SelectorItem):
+    def __init__(self, func: SEL_I, match_args: list[str]):
+        self.item = new_selector_item(func)
+        self.match_args = match_args
+
+    def __str__(self) -> str:
+        return str(self.item)
+
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, Match) and self.item == other.item and self.match_args == other.match_args
+
+    def get_callable(self) -> Callable[..., Any] | None:
+        return self.item.get_callable()
+
+    def matches(self, frame_info: inspect.FrameInfo) -> tuple[bool, dict[str, Any]]:
+        if not self.item.matches(frame_info)[0]:
+            return False, {}
+        return True, self.capture(frame_info)
+
+    def capture(self, frame_info: inspect.FrameInfo) -> dict[str, Any]:
+        local_vars = frame_info.frame.f_locals
+
+        # Check if we're in a ChoiceFunction.__call__ context
+        if isinstance(self.item, CallableSelectorItem) and isinstance(self.item.func, ChoiceFunction):
+            choice_func = local_vars["self"]
+            args = local_vars.get("args", ())
+            kwargs = local_vars.get("kwargs", {})
+
+            # Get the signature of the actual function
+            sig = inspect.signature(choice_func.interface.func)
+
+            # Bind the arguments to get the actual parameter values
+            try:
+                bound_args = sig.bind(*args, **kwargs)
+                bound_args.apply_defaults()
+
+                # Return only the requested match_args
+                return {arg: bound_args.arguments[arg] for arg in self.match_args if arg in bound_args.arguments}
+            except Exception:  # noqa: S110
+                # Fall back to original behavior if binding fails
+                pass
+
+        # Original behavior for regular functions
+        return {arg: local_vars[arg] for arg in self.match_args if arg in local_vars}
+
+
+def new_selector_item(item: SEL_I) -> SelectorItem:
+    if isinstance(item, type) and issubclass(item, ChoiceContext):
+        return ChoiceContextSelectorItem(item)
+    elif isinstance(item, tuple) and len(item) == 2 and isinstance(item[0], type) and isinstance(item[1], str):
+        return ClassSelectorItem(item[0], item[1])
+    elif isinstance(item, SelectorItem):
+        return item
+    elif callable(item) and hasattr(item, "__code__"):
+        return FunctionSelectorItem(item)
+    elif callable(item):
+        return CallableSelectorItem(item)
+    else:
+        raise InvalidSelectorItem(item)
+
+
+def new_selector(items: SEL, impl: str = "") -> Selector:
+    sel_items = [new_selector_item(i) for i in items]
+    return Selector(sel_items, impl)
 
 
 class TraceItem:
@@ -131,6 +209,9 @@ class ChoiceFunction[O]:
         self.funcs: dict[UUID, ChoiceFuncImplementation[O]] = {}
         self.rules: list[Rule] = []
 
+    def __str__(self) -> str:
+        return f"ChoiceFunction({self.interface.func.__name__})"
+
     def _add_func(self, f: Callable[..., Any], func: ChoiceFuncImplementation[O]) -> None:
         self.funcs[func.id] = func
 
@@ -167,7 +248,13 @@ class ChoiceFunction[O]:
     def __call__(self, *args: Any, **kwargs: Any) -> O:
         stack_info = inspect.stack()
         rules = self._sorted_selectors(stack_info)
-        impl = rules[-1].impl if rules else self.interface
+
+        impl = self.interface
+        for rule in reversed(rules):
+            if rule.impl is not None:
+                impl = rule.impl  # Override with best matched rule if one is applicable
+                break
+
         if isinstance(impl, ChoiceFuncImplementation):
             pass
         elif isinstance(impl, ChoiceFunction):
@@ -193,7 +280,7 @@ def rule(selector: SEL, impl: ChoiceFunction | ChoiceFuncImplementation, **kwarg
     else:
         raise NonRule()
     # Choose function implementation
-    sel = Selector(selector, str(impl))
+    sel = new_selector(selector, str(impl))
     choice_fun = sel.choice_function()
     if isinstance(choice_fun, ChoiceFunction):
         choice_fun = cast(ChoiceFunction, choice_fun)
@@ -205,7 +292,7 @@ def rule(selector: SEL, impl: ChoiceFunction | ChoiceFuncImplementation, **kwarg
 def def_rule(selector: SEL) -> Any:
     def decorator_args(func: RuleVals) -> RuleVals:
         # Choose function implementation
-        sel = Selector(selector)
+        sel = new_selector(selector)
         choice_fun = sel.choice_function()
         if isinstance(choice_fun, ChoiceFunction):
             choice_fun = cast(ChoiceFunction, choice_fun)

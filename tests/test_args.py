@@ -74,12 +74,16 @@ def test_def_rule():
 
 @choice.def_rule([test_def_rule, choice.Match(wrap_greet, ["name"]), greet])
 def rule_test_def_rule(captures):
-    """Test defining a rule with a function."""
+    """Rule for test_def_rule"""
     return greet, {"greeting": f"Greetings {captures['name']}"}
 
 
-def test_cap_match():
+def test_match_choice_function():
     assert greet("dog") == "What's up dog"
 
 
-choice.def_rule([test_cap_match, choice.Match(greet, ["name"])])(lambda c: (greet, {"greeting": "What's up"}))
+@choice.def_rule([choice.Match(greet, ["name"])])
+def rule_test_match_choice_function(captures):
+    if "name" in captures and captures["name"] == "dog":
+        return (greet, {"greeting": "What's up"})
+    return None

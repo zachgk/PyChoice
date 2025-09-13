@@ -30,11 +30,11 @@ class SelectorItem:
     def __eq__(self, other: object) -> bool:
         raise NotImplementedError
 
-    def matches(self, frame_info: inspect.FrameInfo) -> tuple[bool, dict[str, Any]]:
+    def get_callable(self) -> Callable[..., Any] | None:
         raise NotImplementedError
 
-    def capture(self, frame_info: inspect.FrameInfo) -> dict[str, Any]:
-        return {}
+    def matches(self, frame_info: inspect.FrameInfo) -> tuple[bool, dict[str, Any]]:
+        raise NotImplementedError
 
 
 SEL_I_CLS = tuple[type, str]
@@ -79,6 +79,9 @@ class FunctionSelectorItem(SelectorItem):
     def __eq__(self, other: object) -> bool:
         return isinstance(other, FunctionSelectorItem) and self.func == other.func
 
+    def get_callable(self) -> Callable[..., Any] | None:
+        return self.func
+
     def matches(self, frame_info: inspect.FrameInfo) -> tuple[bool, dict[str, Any]]:
         return self.func.__code__ == frame_info.frame.f_code, {}
 
@@ -92,6 +95,9 @@ class CallableSelectorItem(SelectorItem):
 
     def __eq__(self, other: object) -> bool:
         return isinstance(other, CallableSelectorItem) and self.func == other.func
+
+    def get_callable(self) -> Callable[..., Any] | None:
+        return self.func
 
     def matches(self, frame_info: inspect.FrameInfo) -> tuple[bool, dict[str, Any]]:
         if not hasattr(self.func.__call__, "__code__"):  # type: ignore[operator]
@@ -129,64 +135,16 @@ class ClassSelectorItem(SelectorItem):
         return False, {}
 
 
-class Match(SelectorItem):
-    def __init__(self, func: SEL_I, match_args: list[str]):
-        self.item = Selector.new_item(func)
-        self.match_args = match_args
-
-    def __str__(self) -> str:
-        return str(self.item)
-
-    def __eq__(self, other: object) -> bool:
-        return isinstance(other, Match) and self.item == other.item and self.match_args == other.match_args
-
-    def matches(self, frame_info: inspect.FrameInfo) -> tuple[bool, dict[str, Any]]:
-        if not self.item.matches(frame_info)[0]:
-            return False, {}
-        return True, self.capture(frame_info)
-
-    def capture(self, frame_info: inspect.FrameInfo) -> dict[str, Any]:
-        local_vars = frame_info.frame.f_locals
-        return {arg: local_vars[arg] for arg in self.match_args if arg in local_vars}
-
-
 class Selector:
-    def __init__(self, items: SEL, impl: str = "") -> None:
-        self.items: list[SelectorItem] = []
+    def __init__(self, items: list[SelectorItem], impl: str = "") -> None:
+        self.items: list[SelectorItem] = items
         self.impl = impl
-        for i in items:
-            self.items.append(Selector.new_item(i))
 
     def __str__(self) -> str:
         return f"{' '.join(str(i) for i in self.items)} => {self.impl}"
 
     def choice_function(self) -> Any:
-        f = self.items[-1]
-        if isinstance(f, CallableSelectorItem):
-            return f.func
-        elif isinstance(f, Match):
-            f2 = f.item
-            if isinstance(f2, CallableSelectorItem):
-                return f2.func
-            else:
-                raise NonFunction()
-        else:
-            raise NonFunction()
-
-    @staticmethod
-    def new_item(item: SEL_I) -> SelectorItem:
-        if isinstance(item, type) and issubclass(item, ChoiceContext):
-            return ChoiceContextSelectorItem(item)
-        elif isinstance(item, tuple) and len(item) == 2 and isinstance(item[0], type) and isinstance(item[1], str):
-            return ClassSelectorItem(item[0], item[1])
-        elif isinstance(item, SelectorItem):
-            return item
-        elif callable(item) and hasattr(item, "__code__"):
-            return FunctionSelectorItem(item)
-        elif callable(item):
-            return CallableSelectorItem(item)
-        else:
-            raise InvalidSelectorItem(item)
+        return self.items[-1].get_callable()
 
     # Returns the indices of selectors in sorted order with worst matching at 0 and best matching at -1.
     # Non-matching are not returned

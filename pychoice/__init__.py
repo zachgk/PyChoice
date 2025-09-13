@@ -1,6 +1,6 @@
 from .args import MissingChoiceArg
-from .funcs import Trace, def_rule, func, impl, registry, rule, trace_status, wrap
-from .selector import ChoiceContext, Match
+from .funcs import Match, Trace, def_rule, func, impl, registry, rule, trace_status, wrap
+from .selector import ChoiceContext
 
 
 def trace_start() -> None:
