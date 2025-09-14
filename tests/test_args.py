@@ -62,9 +62,7 @@ def test_cap():
     assert wrap_greet("me") == "Greetings me me"
 
 
-choice.def_rule([test_cap, choice.Match(wrap_greet, ["name"]), greet])(
-    lambda c: (greet, {"greeting": f"Greetings {c['name']}"})
-)
+choice.def_rule([test_cap, wrap_greet, greet])(lambda c: (greet, {"greeting": f"Greetings {c[1]['name']}"}))
 choice.def_rule([test_cap, greet])(lambda c: None)  # Also test None return
 
 
@@ -72,18 +70,18 @@ def test_def_rule():
     assert wrap_greet("me") == "Greetings me me"
 
 
-@choice.def_rule([test_def_rule, choice.Match(wrap_greet, ["name"]), greet])
+@choice.def_rule([test_def_rule, wrap_greet, greet])
 def rule_test_def_rule(captures):
     """Rule for test_def_rule"""
-    return greet, {"greeting": f"Greetings {captures['name']}"}
+    return greet, {"greeting": f"Greetings {captures[1]['name']}"}
 
 
 def test_match_choice_function():
     assert greet("dog") == "What's up dog"
 
 
-@choice.def_rule([choice.Match(greet, ["name"])])
+@choice.def_rule([greet])
 def rule_test_match_choice_function(captures):
-    if "name" in captures and captures["name"] == "dog":
+    if "name" in captures[0] and captures[0]["name"] == "dog":
         return (greet, {"greeting": "What's up"})
     return None

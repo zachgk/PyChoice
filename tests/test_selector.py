@@ -1,8 +1,8 @@
 import networkx as nx
 import pytest
 
+from pychoice.args import Selector
 from pychoice.poset import build_selector_poset, visualize_selector_poset
-from pychoice.selector import Selector
 
 # Define functions
 

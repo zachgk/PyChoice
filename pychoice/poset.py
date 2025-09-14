@@ -3,7 +3,7 @@ from typing import Optional
 import matplotlib.pyplot as plt
 import networkx as nx
 
-from .selector import Selector
+from .args import Selector
 
 
 def build_selector_poset(selectors: list[Selector]) -> nx.DiGraph:

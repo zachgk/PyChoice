@@ -8,7 +8,7 @@ from functools import cmp_to_key
 from typing import Any, Callable, TypeVar, cast
 from uuid import UUID, uuid5
 
-from .args import UUID_NAMESPACE, ChoiceFuncImplementation, MatchedRule, Rule, RuleVals
+from .args import UUID_NAMESPACE, ChoiceFuncImplementation, MatchedRule, Rule, RuleVals, Selector
 from .selector import (
     SEL,
     SEL_I,
@@ -19,7 +19,6 @@ from .selector import (
     FunctionSelectorItem,
     InvalidSelectorItem,
     OptStackFrame,
-    Selector,
     SelectorItem,
 )
 
@@ -40,36 +39,11 @@ class Match(SelectorItem):
     def get_callable(self) -> Callable[..., Any] | None:
         return self.item.get_callable()
 
-    def matches(self, frame_info: inspect.FrameInfo) -> tuple[bool, dict[str, Any]]:
-        if not self.item.matches(frame_info)[0]:
-            return False, {}
-        return True, self.capture(frame_info)
+    def matches(self, frame_info: inspect.FrameInfo) -> bool:
+        return self.item.matches(frame_info)
 
     def capture(self, frame_info: inspect.FrameInfo) -> dict[str, Any]:
-        local_vars = frame_info.frame.f_locals
-
-        # Check if we're in a ChoiceFunction.__call__ context
-        if isinstance(self.item, CallableSelectorItem) and isinstance(self.item.func, ChoiceFunction):
-            choice_func = local_vars["self"]
-            args = local_vars.get("args", ())
-            kwargs = local_vars.get("kwargs", {})
-
-            # Get the signature of the actual function
-            sig = inspect.signature(choice_func.interface.func)
-
-            # Bind the arguments to get the actual parameter values
-            try:
-                bound_args = sig.bind(*args, **kwargs)
-                bound_args.apply_defaults()
-
-                # Return only the requested match_args
-                return {arg: bound_args.arguments[arg] for arg in self.match_args if arg in bound_args.arguments}
-            except Exception:  # noqa: S110
-                # Fall back to original behavior if binding fails
-                pass
-
-        # Original behavior for regular functions
-        return {arg: local_vars[arg] for arg in self.match_args if arg in local_vars}
+        return Selector._collect_captures(self.item, frame_info)
 
 
 def new_selector_item(item: SEL_I) -> SelectorItem:
@@ -227,9 +201,9 @@ class ChoiceFunction[O]:
         # Get indices and filter to only matching
         rules = []
         for r in self.rules:
-            matches, capture = r.selector.matches(stack_info)
-            if matches:
-                rules.append(MatchedRule(r, capture))
+            matched_rule = r.selector.matches(stack_info, r)
+            if matched_rule is not None:
+                rules.append(matched_rule)
         if not rules:
             return []
 
@@ -375,7 +349,7 @@ class ChoiceJSONEncoder(json.JSONEncoder):
         elif isinstance(obj, MatchedRule):
             return {
                 "rule": obj.rule,
-                "captures": {k: str(v) for k, v in obj.captures.items()},
+                "captures": obj.captures,
                 "vals": {k: str(v) for k, v in obj.vals.items()},
             }
         try:
