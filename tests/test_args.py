@@ -85,3 +85,10 @@ def rule_test_match_choice_function(captures):
     if "name" in captures[0] and captures[0]["name"] == "dog":
         return (greet, {"greeting": "What's up"})
     return None
+
+
+def test_match():
+    assert greet("dog2") == "What's up dog2"
+
+
+choice.rule([choice.Match(greet, name="dog2")], greet, greeting="What's up")

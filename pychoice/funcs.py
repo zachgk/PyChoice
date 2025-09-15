@@ -26,21 +26,37 @@ F = TypeVar("F", bound=Callable[..., Any])
 
 
 class Match(SelectorItem):
-    def __init__(self, func: SEL_I, match_args: list[str]):
+    def __init__(self, func: SEL_I, **kwargs: Any):
         self.item = new_selector_item(func)
-        self.match_args = match_args
+        self.match_kwargs = kwargs
 
     def __str__(self) -> str:
         return str(self.item)
 
     def __eq__(self, other: object) -> bool:
-        return isinstance(other, Match) and self.item == other.item and self.match_args == other.match_args
+        return isinstance(other, Match) and self.item == other.item and self.match_kwargs == other.match_kwargs
 
     def get_callable(self) -> Callable[..., Any] | None:
         return self.item.get_callable()
 
     def matches(self, frame_info: inspect.FrameInfo) -> bool:
-        return self.item.matches(frame_info)
+        # First check if the underlying item matches
+        if not self.item.matches(frame_info):
+            return False
+
+        # If no kwargs to match, then it's a match
+        if not self.match_kwargs:
+            return True
+
+        # Capture the arguments and compare against expected kwargs
+        captured = self.capture(frame_info)
+
+        # Check if all expected kwargs match the captured values
+        for key, expected_value in self.match_kwargs.items():
+            if key not in captured or captured[key] != expected_value:
+                return False
+
+        return True
 
     def capture(self, frame_info: inspect.FrameInfo) -> dict[str, Any]:
         return Selector._collect_captures(self.item, frame_info)
