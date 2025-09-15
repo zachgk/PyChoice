@@ -9,7 +9,7 @@ from uuid import UUID, uuid5
 from .selector import OptStackFrame, SelectorItem, StackFrame
 
 F = TypeVar("F", bound=Callable[..., Any])
-type RuleVals = Callable[[list[dict[str, Any]]], Optional[tuple[ChoiceFuncImplementation, dict[str, Any]]]]
+type RuleVals = Callable[[list[dict[str, Any]]], Optional[tuple[ChoiceFuncImplementation | None, dict[str, Any]]]]
 
 UUID_NAMESPACE = UUID("e7221d32-4940-4c49-b0e3-5f03446226ab")
 

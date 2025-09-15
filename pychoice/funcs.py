@@ -229,10 +229,6 @@ class ChoiceFunction[O]:
         # Sort
         rules = sorted(rules, key=cmp_to_key(compare))
 
-        # Prune non-matching implementations for arg overrides
-        impl = rules[-1].rule.impl
-        rules = [r for r in rules if r.rule.impl == impl]
-
         return rules
 
     def __call__(self, *args: Any, **kwargs: Any) -> O:
@@ -244,6 +240,9 @@ class ChoiceFunction[O]:
             if rule.impl is not None:
                 impl = rule.impl  # Override with best matched rule if one is applicable
                 break
+
+        # Prune non-matching implementations for arg overrides
+        rules = [r for r in rules if r.rule.impl == impl or r.rule.impl is None]
 
         if isinstance(impl, ChoiceFuncImplementation):
             pass
@@ -262,21 +261,24 @@ class ChoiceFunction[O]:
 registry: list[ChoiceFunction] = []
 
 
-def rule(selector: SEL, impl: ChoiceFunction | ChoiceFuncImplementation, **kwargs: Any) -> None:
-    if isinstance(impl, ChoiceFunction):
-        impl = impl.interface
+def rule(selector: SEL, impl: ChoiceFunction | ChoiceFuncImplementation | None, **kwargs: Any) -> None:
+    if impl is None:
+        # Allow None implementation for args-only rules
+        processed_impl = None
+    elif isinstance(impl, ChoiceFunction):
+        processed_impl = impl.interface
     elif isinstance(impl, ChoiceFuncImplementation):
-        pass
+        processed_impl = impl
     else:
         raise NonRule()
     # Choose function implementation
-    sel = new_selector(selector, str(impl))
+    sel = new_selector(selector, str(processed_impl) if processed_impl is not None else "")
     choice_fun = sel.choice_function()
     if isinstance(choice_fun, ChoiceFunction):
         choice_fun = cast(ChoiceFunction, choice_fun)
     else:
         raise TypeError()
-    choice_fun._add_rule(Rule(sel, impl, lambda _: (impl, kwargs)))
+    choice_fun._add_rule(Rule(sel, processed_impl, lambda _: (processed_impl, kwargs)))
 
 
 def def_rule(selector: SEL) -> Any:

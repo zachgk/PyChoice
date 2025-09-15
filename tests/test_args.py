@@ -48,6 +48,13 @@ choice.rule([wrap_greet, greet], greet, greeting="Wrap")
 choice.rule([test_override_override, wrap_greet, greet], greet, greeting="Greetings")
 
 
+def test_only_args():
+    assert greet("me") == "Greetings me"
+
+
+choice.rule([test_only_args, greet], None, greeting="Greetings")
+
+
 def test_missing_choice_arg():
     with pytest.raises(choice.MissingChoiceArg):
 
