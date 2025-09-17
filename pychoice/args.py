@@ -99,7 +99,7 @@ class Selector:
             if self.items[selector_index].matches(frame_info):
                 captures.append(Selector._collect_captures(self.items[selector_index], frame_info))
                 if selector_index == 0:
-                    return MatchedRule(rule, captures)
+                    return MatchedRule(rule, list(reversed(captures)))
                 else:
                     # More selector components
                     selector_index = selector_index - 1
