@@ -10,7 +10,8 @@ copyright: Maintained by <a href="https://zachgk.com">zachgk</a>.
 nav:
   - Home: index.md
   - Getting Started: getting-started.md
-  - Tutorial: tutorial.md
+  - Functions: functions.md
+  - Rules: rules.md
   - API Reference: modules.md
 plugins:
   - search

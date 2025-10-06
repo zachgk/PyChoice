@@ -13,6 +13,7 @@ uv pip install  # Install to pip
 
 ## Next Steps
 
-- Read the [Tutorial](tutorial.md) for more detailed examples
+- Learn about [Functions](functions.md) - creating choice functions and implementations
+- Understand [Rules](rules.md) - customizing function behavior with the rule system
 - Check the [API Reference](modules.md) for complete documentation
 - Learn about tracing and visualization features
