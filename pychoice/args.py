@@ -24,16 +24,16 @@ UUID_NAMESPACE = UUID("e7221d32-4940-4c49-b0e3-5f03446226ab")
 @dataclass
 class Rule:
     """Represents a choice rule that defines when and how to customize function behavior.
-    
-    A Rule combines a Selector (which defines when the rule applies) with an 
+
+    A Rule combines a Selector (which defines when the rule applies) with an
     implementation and values (which define how to customize the behavior).
-    
+
     Attributes:
         selector: The Selector that determines when this rule matches
         impl: The ChoiceFuncImplementation to use, or None for parameter-only rules
         vals: Function that converts captures to implementation and values
         doc: Optional documentation string for the rule
-        
+
     Example:
         ```python
         # Rule that changes greeting in my_app context
@@ -44,6 +44,7 @@ class Rule:
         )
         ```
     """
+
     selector: Selector
     impl: ChoiceFuncImplementation | None
     vals: RuleVals
@@ -58,16 +59,16 @@ class Rule:
 
 class MatchedRule:
     """Represents a rule that has been matched against a call stack.
-    
+
     When a Selector matches a call stack, it creates a MatchedRule containing
     the original rule, captured variables, and resolved implementation details.
-    
+
     Attributes:
         rule: The original Rule that was matched
         captures: List of variable dictionaries captured from matching stack frames
         impl: The resolved ChoiceFuncImplementation to use
         vals: The resolved parameter values to apply
-        
+
     Example:
         ```python
         # When a rule matches, it becomes a MatchedRule
@@ -76,6 +77,7 @@ class MatchedRule:
         # matched.vals contains the parameter overrides
         ```
     """
+
     def __init__(self, rule: Rule | None, captures: list[dict[str, Any]]) -> None:
         if rule is None:
             rule = Rule(Selector([]), None, lambda c: None)
@@ -93,10 +95,10 @@ class MatchedRule:
 
 class MissingChoiceArg(Exception):
     """Exception raised when a choice function is missing expected arguments.
-    
+
     This occurs when a @choice.func decorator specifies choice arguments that
     don't exist as parameters in the decorated function.
-    
+
     Example:
         ```python
         @choice.func(args=["nonexistent"])  # This arg doesn't exist
@@ -105,6 +107,7 @@ class MissingChoiceArg(Exception):
         # Raises MissingChoiceArg
         ```
     """
+
     def __init__(self, func: Callable[..., Any], choice_arg: str):
         msg = f"The function {func.__name__} is missing the expected choice kwarg {choice_arg}"
         super().__init__(msg)
@@ -112,21 +115,22 @@ class MissingChoiceArg(Exception):
 
 class Selector:
     """Defines a pattern for matching against function call stacks.
-    
+
     A Selector contains a list of SelectorItems that must match in order
     from the deepest to shallowest call stack frames. It's used to determine
     when choice rules should be applied.
-    
+
     Attributes:
         items: List of SelectorItems that define the matching pattern
         impl: Implementation identifier string for display purposes
-        
+
     Example:
         ```python
         # Match when greet() is called from my_app()
         selector = Selector([my_app, greet])
         ```
     """
+
     def __init__(self, items: list[SelectorItem], impl: str = "") -> None:
         self.items: list[SelectorItem] = items
         self.impl = impl
@@ -136,7 +140,7 @@ class Selector:
 
     def choice_function(self) -> Any:
         """Get the choice function that this selector targets.
-        
+
         Returns:
             The callable from the last SelectorItem, typically a choice function
         """
@@ -145,13 +149,13 @@ class Selector:
     @staticmethod
     def sort(selectors: list[Selector]) -> list[int]:
         """Sort selectors by specificity, returning indices.
-        
-        Returns indices of selectors sorted from least specific (0) to most 
+
+        Returns indices of selectors sorted from least specific (0) to most
         specific (-1). Non-matching selectors are excluded.
-        
+
         Args:
             selectors: List of selectors to sort
-            
+
         Returns:
             List of indices in specificity order (most specific last)
         """
@@ -171,11 +175,11 @@ class Selector:
     @staticmethod
     def all_matches(selectors: list[Selector], stack_info: OptStackFrame = None) -> list[bool]:
         """Check which selectors match the current call stack.
-        
+
         Args:
             selectors: List of selectors to check
             stack_info: Optional stack frames, uses current stack if None
-            
+
         Returns:
             Boolean list indicating which selectors match
         """
@@ -187,11 +191,11 @@ class Selector:
 
     def matches(self, stack_info: OptStackFrame = None, rule: Rule | None = None) -> MatchedRule | None:
         """Check if this selector matches the given call stack.
-        
+
         Args:
             stack_info: Stack frames to match against, uses current if None
             rule: Associated rule for creating MatchedRule
-            
+
         Returns:
             MatchedRule if selector matches, None otherwise
         """
@@ -216,11 +220,11 @@ class Selector:
     @staticmethod
     def _collect_captures(item: SelectorItem, frame_info: inspect.FrameInfo) -> dict[str, Any]:
         """Collect variable captures from a matching stack frame.
-        
+
         Args:
             item: The SelectorItem that matched
             frame_info: The stack frame that was matched
-            
+
         Returns:
             Dictionary of captured local variables
         """
@@ -255,11 +259,11 @@ class Selector:
 
     def compare(self, other: Selector, stack_info: StackFrame) -> int:
         """Compare selector specificity for a given call stack.
-        
+
         Args:
             other: Other selector to compare against
             stack_info: Call stack to compare within
-            
+
         Returns:
             -1 if self is less specific, 1 if more specific, 0 if equal
         """
@@ -292,10 +296,10 @@ class Selector:
 
     def generic_compare(self, other: Selector) -> int:
         """Compare selectors generically without specific call stack context.
-        
+
         Args:
             other: Other selector to compare against
-            
+
         Returns:
             -1 if self is sub-selector of other, 1 if other is sub-selector of self, 0 if no relation
         """
@@ -322,15 +326,15 @@ class Selector:
 
 class ChoiceFuncImplementation[O]:
     """Implementation wrapper for choice functions.
-    
+
     This class wraps a regular function to make it usable as a choice function
     implementation, handling parameter validation, rule application, and invocation.
-    
+
     Attributes:
         id: Unique identifier for this implementation
         func: The wrapped function
         defaults: Default parameter values from the function signature
-        
+
     Example:
         ```python
         # Create an implementation for a greeting function
@@ -338,13 +342,14 @@ class ChoiceFuncImplementation[O]:
         result = impl(matched_rules, ("John",), {})
         ```
     """
+
     def __init__(self, choice_args: list[str], func: F):
         """Initialize a choice function implementation.
-        
+
         Args:
             choice_args: List of parameter names that can be customized by rules
             func: The function to wrap as a choice implementation
-            
+
         Raises:
             MissingChoiceArg: If any choice_arg is not a parameter of func
         """
@@ -366,12 +371,12 @@ class ChoiceFuncImplementation[O]:
 
     def choice_kwargs(self, rules: list[MatchedRule], args: tuple[Any, ...], kwargs: dict[str, Any]) -> dict[str, Any]:
         """Merge rule values with provided kwargs.
-        
+
         Args:
             rules: List of matched rules to apply
             args: Positional arguments (unused but kept for consistency)
             kwargs: Keyword arguments from the call
-            
+
         Returns:
             Merged dictionary of keyword arguments with rule values applied
         """
@@ -383,12 +388,12 @@ class ChoiceFuncImplementation[O]:
 
     def __call__(self, rules: list[MatchedRule], args: tuple[Any, ...], kwargs: dict[str, Any]) -> O:
         """Execute the implementation with rule-modified parameters.
-        
+
         Args:
             rules: List of matched rules to apply
             args: Positional arguments to pass to the function
             kwargs: Keyword arguments to pass to the function
-            
+
         Returns:
             Result of calling the wrapped function with modified parameters
         """

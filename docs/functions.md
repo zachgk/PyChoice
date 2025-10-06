@@ -137,13 +137,13 @@ def format_message(content: str, format="text", prefix=""):
     prefix: choice argument with default
     """
     message = f"{prefix}{content}" if prefix else content
-    
+
     if format == "text":
         return message
     elif format == "html":
         return f"<p>{message}</p>"
     elif format == "markdown":
         return f"**{message}**"
-    
+
     return message
 ```

@@ -3,7 +3,7 @@
 ## Core Functions Module
 ::: pychoice.funcs
 
-## Arguments and Rules Module  
+## Arguments and Rules Module
 ::: pychoice.args
 
 ## Selector Classes Module

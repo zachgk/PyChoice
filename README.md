@@ -2,6 +2,7 @@
 
 A library for manging choices, options, and configurations across abstraction hierarchy
 - **Github repository**: <https://github.com/zachgk/PyChoice/>
+- **Documentation**: <https://blog.zachkimberg.com/PyChoice/>
 
 The pychoice library is a python implementation of choice as described in this [blog post](https://blog.zachkimberg.com/programming%20languages/doing-things-well/) by Zach Kimberg (who also authored this library). The best way to think of pychoice is that it is a pseudo-new feature of the python programming language implemented as a library. It can be used for how to manage complexity around making modules heavily customizable. And this is done by customizing it through the use of choice. This includes customization across abstraction boundaries. Read the original blog post to understand the deeper philosphy behind the language and why it is designed as it is, but this isn't required as the usage is clear enough from examples.
 

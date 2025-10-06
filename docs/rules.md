@@ -181,7 +181,7 @@ def dynamic_rule(captures):
     """
     The docstring here is used to document the underlying reasons behind the rule
     captures[0]: Arguments to test_dynamic
-    captures[1]: Arguments to wrap_greet  
+    captures[1]: Arguments to wrap_greet
     captures[2]: Arguments to greet
     """
     # Access the name parameter from wrap_greet call
@@ -231,20 +231,20 @@ def smart_greeting_rule(captures):
     """Apply different greetings based on name patterns"""
     if "name" not in captures[0]:
         return None
-    
+
     name = captures[0]["name"]
-    
+
     if name.startswith("Dr."):
         return greet, {"greeting": "Good day"}
     elif name.startswith("Prof."):
         return greet, {"greeting": "Greetings"}
     elif name.isupper():
         return greet, {"greeting": "Hey"}
-    
+
     return None
 
 print(greet("Dr. Smith"))    # Output: Good day Dr. Smith
-print(greet("Prof. Jones"))  # Output: Greetings Prof. Jones  
+print(greet("Prof. Jones"))  # Output: Greetings Prof. Jones
 print(greet("ROBOT"))        # Output: Hey ROBOT
 print(greet("Alice"))        # Output: Hello Alice
 ```

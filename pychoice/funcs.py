@@ -34,14 +34,14 @@ F = TypeVar("F", bound=Callable[..., Any])
 
 class Match(SelectorItem):
     """Advanced selector item that matches function calls with specific argument values.
-    
+
     Match extends basic function matching to also check argument values, allowing
     for more precise rule targeting based on function parameters.
-    
+
     Attributes:
         item: The underlying SelectorItem to match
         match_kwargs: Keyword arguments that must match for this selector to apply
-        
+
     Example:
         ```python
         # Match greet() calls where greeting="Hi"
@@ -49,6 +49,7 @@ class Match(SelectorItem):
         selector = Selector([my_app, match_item])
         ```
     """
+
     def __init__(self, func: SEL_I, **kwargs: Any):
         self.item = new_selector_item(func)
         self.match_kwargs = kwargs
@@ -65,13 +66,13 @@ class Match(SelectorItem):
 
     def matches(self, frame_info: inspect.FrameInfo) -> bool:
         """Check if this Match selector matches a stack frame.
-        
+
         First checks if the underlying item matches, then verifies that
         all specified keyword arguments match the actual call arguments.
-        
+
         Args:
             frame_info: Stack frame to check for matching
-            
+
         Returns:
             True if both function and arguments match, False otherwise
         """
@@ -95,10 +96,10 @@ class Match(SelectorItem):
 
     def capture(self, frame_info: inspect.FrameInfo) -> dict[str, Any]:
         """Capture local variables from the matching stack frame.
-        
+
         Args:
             frame_info: Stack frame to capture variables from
-            
+
         Returns:
             Dictionary of captured local variables
         """
@@ -107,25 +108,25 @@ class Match(SelectorItem):
 
 def new_selector_item(item: SEL_I) -> SelectorItem:
     """Create a SelectorItem from various input types.
-    
+
     This factory function converts different types of selector inputs into
     appropriate SelectorItem instances for use in Selectors.
-    
+
     Args:
         item: Input item to convert (function, class, tuple, etc.)
-        
+
     Returns:
         Appropriate SelectorItem subclass instance
-        
+
     Raises:
         InvalidSelectorItem: If the input type cannot be converted
-        
+
     Example:
         ```python
         # Convert function to selector item
         func_item = new_selector_item(my_function)
-        
-        # Convert class method to selector item  
+
+        # Convert class method to selector item
         method_item = new_selector_item((MyClass, "method_name"))
         ```
     """
@@ -145,17 +146,17 @@ def new_selector_item(item: SEL_I) -> SelectorItem:
 
 def new_selector(items: SEL, impl: str = "") -> Selector:
     """Create a Selector from a list of selector inputs.
-    
+
     Convenience function that converts a list of various selector inputs
     into SelectorItems and creates a Selector.
-    
+
     Args:
         items: List of selector inputs (functions, classes, etc.)
         impl: Optional implementation identifier string
-        
+
     Returns:
         Selector instance with converted SelectorItems
-        
+
     Example:
         ```python
         # Create selector for my_app -> greet call chain
@@ -168,12 +169,12 @@ def new_selector(items: SEL, impl: str = "") -> Selector:
 
 class TraceItem:
     """Represents a single choice function call in a trace.
-    
+
     TraceItems capture the complete context of a choice function invocation,
     including which implementation was used, what rules applied, and the
     arguments involved. They form a hierarchical structure to represent
     nested choice function calls.
-    
+
     Attributes:
         func: The ChoiceFunction that was called
         impl: The ChoiceFuncImplementation that was executed
@@ -184,6 +185,7 @@ class TraceItem:
         choice_kwargs: Final keyword arguments after rule application
         items: List of nested TraceItems for sub-calls
     """
+
     def __init__(
         self,
         func: ChoiceFunction,
@@ -195,14 +197,14 @@ class TraceItem:
         choice_kwargs: dict[str, Any],
     ) -> None:
         """Initialize a TraceItem with complete call context.
-        
+
         Args:
             func: The ChoiceFunction that was invoked
             impl: The implementation that was selected and executed
             rules: List of rules that matched and applied
             stack_info: Call stack frames at time of invocation
             args: Positional arguments to the function
-            kwargs: Original keyword arguments 
+            kwargs: Original keyword arguments
             choice_kwargs: Final keyword arguments after rule processing
         """
         self.func = func
@@ -216,7 +218,7 @@ class TraceItem:
 
     def print_item(self, sb: io.TextIOBase, indent: int = 0) -> None:
         """Print formatted representation of this trace item.
-        
+
         Args:
             sb: Text buffer to write output to
             indent: Indentation level for nested display
@@ -231,7 +233,7 @@ class TraceItem:
 
     def to_dict(self) -> dict[str, Any]:
         """Convert trace item to dictionary representation.
-        
+
         Returns:
             Dictionary representation suitable for JSON serialization
         """
@@ -249,21 +251,22 @@ class TraceItem:
 
 class Tracing:
     """Manages the collection of trace items during tracing.
-    
+
     Tracing maintains the active stack of TraceItems as choice functions
     are called, building a hierarchical structure of invocations.
-    
+
     Attributes:
         items: Completed top-level trace items
         stack: Current stack of active trace items
     """
+
     def __init__(self) -> None:
         self.items: list[TraceItem] = []
         self.stack: list[TraceItem] = []
 
     def begin(self, item: TraceItem) -> None:
         """Begin tracing a new choice function call.
-        
+
         Args:
             item: TraceItem for the function call being started
         """
@@ -271,7 +274,7 @@ class Tracing:
 
     def end(self) -> None:
         """End tracing the most recent choice function call.
-        
+
         Raises:
             MismatchedTrace: If there are no active calls to end
         """
@@ -286,13 +289,13 @@ class Tracing:
 
 class Trace:
     """Contains the complete trace of choice function calls.
-    
+
     A Trace represents the final result of tracing, containing all
     choice function invocations that occurred during the traced period.
-    
+
     Attributes:
         items: List of top-level TraceItems representing the call hierarchy
-        
+
     Example:
         ```python
         trace_start()
@@ -302,6 +305,7 @@ class Trace:
         trace.save("choices.json")  # Save for analysis
         ```
     """
+
     def __init__(self, tracing: Tracing) -> None:
         self.items = tracing.items
 
@@ -314,10 +318,10 @@ class Trace:
 
     def save(self, filename: str) -> None:
         """Save trace to JSON file for analysis.
-        
+
         Args:
             filename: Path to save the JSON trace file
-            
+
         Example:
             ```python
             trace.save("debug_choices.json")
@@ -329,20 +333,21 @@ class Trace:
 
 class TraceStatus:
     """Global tracing state manager.
-    
+
     TraceStatus maintains the global state of tracing, allowing
     trace collection to be started and stopped. It's used internally
     by the trace_start() and trace_stop() functions.
-    
+
     Attributes:
         trace: Current active Tracing instance, or None if not tracing
     """
+
     def __init__(self) -> None:
         self.trace: Tracing | None = None
 
     def call_begin(self, item: TraceItem) -> None:
         """Record the beginning of a choice function call.
-        
+
         Args:
             item: TraceItem representing the call being started
         """
@@ -360,7 +365,7 @@ class TraceStatus:
 
     def stop(self) -> Trace:
         """Stop tracing and return collected trace.
-        
+
         Returns:
             Trace object containing all collected choice function calls
         """
@@ -374,38 +379,40 @@ trace_status = TraceStatus()
 
 class NonRule(Exception):
     """Exception raised when an invalid rule implementation is provided.
-    
+
     This occurs when trying to create a rule with something that is not
     a ChoiceFunction or ChoiceFuncImplementation.
     """
+
     def __init__(self) -> None:
         super().__init__("Expected a choice function for the rule impl")
 
 
 class MismatchedTrace(RuntimeError):
     """Exception raised when trace begin/end calls are mismatched.
-    
+
     This occurs when trace_end() is called without a corresponding
     trace_begin(), indicating a bug in the tracing logic.
     """
+
     def __init__(self) -> None:
         super().__init__("Mismatched choice Trace end call")
 
 
 class ChoiceFunction[O]:
     """The core choice function that manages rules and dispatches to implementations.
-    
+
     ChoiceFunction is created by the @func decorator and serves as the central
     orchestrator for choice-based function calls. It maintains a registry of
     rules and alternative implementations, selecting the most appropriate one
     based on the current call stack.
-    
+
     Attributes:
         id: Unique identifier for this choice function
         interface: The default ChoiceFuncImplementation
         funcs: Dictionary of alternative implementations by UUID
         rules: List of rules that apply to this choice function
-        
+
     Example:
         ```python
         @choice.func(args=["greeting"])
@@ -414,9 +421,10 @@ class ChoiceFunction[O]:
         # greet is now a ChoiceFunction instance
         ```
     """
+
     def __init__(self, interface: ChoiceFuncImplementation[O]) -> None:
         """Initialize a ChoiceFunction with a default implementation.
-        
+
         Args:
             interface: The default ChoiceFuncImplementation to use
         """
@@ -430,7 +438,7 @@ class ChoiceFunction[O]:
 
     def _add_func(self, f: Callable[..., Any], func: ChoiceFuncImplementation[O]) -> None:
         """Add an alternative implementation to this choice function.
-        
+
         Args:
             f: The original function (unused but kept for compatibility)
             func: The ChoiceFuncImplementation to add
@@ -439,7 +447,7 @@ class ChoiceFunction[O]:
 
     def _add_rule(self, rule: Rule) -> None:
         """Add a rule to this choice function.
-        
+
         Args:
             rule: The Rule to add to the rule list
         """
@@ -447,10 +455,10 @@ class ChoiceFunction[O]:
 
     def _sorted_selectors(self, stack_info: OptStackFrame = None) -> list[MatchedRule]:
         """Get matching rules sorted by specificity.
-        
+
         Args:
             stack_info: Optional stack frames, uses current stack if None
-            
+
         Returns:
             List of MatchedRules sorted from least to most specific
         """
@@ -509,21 +517,21 @@ registry: list[ChoiceFunction] = []
 
 def rule(selector: SEL, impl: ChoiceFunction | ChoiceFuncImplementation | None, **kwargs: Any) -> None:
     """Create a choice rule that customizes function behavior in specific contexts.
-    
+
     Rules define when and how to customize choice functions. They specify a selector
     (which determines when the rule applies) and either an alternative implementation
     or parameter overrides.
-    
+
     Args:
         selector: List defining the call stack pattern to match
         impl: ChoiceFunction, ChoiceFuncImplementation, or None for parameter-only rules
         **kwargs: Parameter values to apply when this rule matches
-        
+
     Example:
         ```python
         # Parameter-only rule
         choice.rule([my_app, greet], greet, greeting="Hi")
-        
+
         # Implementation-switching rule
         choice.rule([formal_context, greet], formal_greet_impl)
         ```
@@ -549,17 +557,17 @@ def rule(selector: SEL, impl: ChoiceFunction | ChoiceFuncImplementation | None, 
 
 def def_rule(selector: SEL) -> Any:
     """Decorator for creating dynamic rules with custom logic.
-    
+
     Unlike simple rules created with rule(), def_rule allows you to create
     rules with custom logic that can dynamically determine parameter values
     based on captured variables from the call stack.
-    
+
     Args:
         selector: List defining the call stack pattern to match
-        
+
     Returns:
         Decorator function for the rule implementation
-        
+
     Example:
         ```python
         @choice.def_rule([debug_mode, log])
@@ -568,6 +576,7 @@ def def_rule(selector: SEL) -> Any:
             return None, {"level": "DEBUG", "verbose": True}
         ```
     """
+
     def decorator_args(func: RuleVals) -> RuleVals:
         # Choose function implementation
         sel = new_selector(selector)
@@ -584,16 +593,16 @@ def def_rule(selector: SEL) -> Any:
 
 def func[O](args: list[str] | None = None) -> Callable[[Callable[..., O]], ChoiceFunction[O]]:
     """Decorator to create a choice function from a regular function.
-    
+
     This is the primary decorator for creating choice functions. It converts
     a regular function into a ChoiceFunction that can be customized through rules.
-    
+
     Args:
         args: List of parameter names that can be customized by rules
-        
+
     Returns:
         Decorator function that converts a function to a ChoiceFunction
-        
+
     Example:
         ```python
         @choice.func(args=["greeting", "punctuation"])
@@ -622,17 +631,17 @@ def impl[O](
     implements: ChoiceFunction[O], args: list[str] | None = None
 ) -> Callable[[Callable[..., O]], ChoiceFuncImplementation[O]]:
     """Decorator to create alternative implementations for choice functions.
-    
+
     This decorator creates alternative implementations that can be used by
     rules to completely replace the behavior of a choice function in specific contexts.
-    
+
     Args:
         implements: The ChoiceFunction this will be an implementation for
         args: List of parameter names this implementation accepts
-        
+
     Returns:
         Decorator function that creates a ChoiceFuncImplementation
-        
+
     Example:
         ```python
         @choice.impl(implements=greet, args=["greeting", "title"])
@@ -658,23 +667,23 @@ def wrap[O](
     f: Callable[..., O], implements: ChoiceFunction[O], args: list[str] | None = None
 ) -> ChoiceFuncImplementation[O]:
     """Convert an existing function into a choice function implementation.
-    
+
     This is a non-decorator alternative to @impl for when you want to convert
     an existing function into a choice implementation.
-    
+
     Args:
         f: The function to convert
         implements: The ChoiceFunction this will implement
         args: List of parameter names this implementation accepts
-        
+
     Returns:
         ChoiceFuncImplementation wrapping the provided function
-        
+
     Example:
         ```python
         def existing_greet(name: str, style="casual"):
             return f"Hey {name}!"
-            
+
         casual_impl = choice.wrap(existing_greet, greet, args=["style"])
         ```
     """
@@ -683,22 +692,23 @@ def wrap[O](
 
 class ChoiceJSONEncoder(json.JSONEncoder):
     """Custom JSON encoder for PyChoice objects.
-    
+
     This encoder handles serialization of PyChoice-specific objects like
     TraceItems, Traces, ChoiceFunctions, and Rules into JSON format.
     It's used primarily for trace serialization and debugging.
-    
+
     Example:
         ```python
         trace_data = json.dumps(trace, cls=ChoiceJSONEncoder, indent=2)
         ```
     """
+
     def default(self, obj: Any) -> Any:
         """Convert PyChoice objects to JSON-serializable dictionaries.
-        
+
         Args:
             obj: Object to serialize
-            
+
         Returns:
             JSON-serializable representation of the object
         """

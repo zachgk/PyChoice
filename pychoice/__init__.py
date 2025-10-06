@@ -1,17 +1,17 @@
 """PyChoice: A library for managing choices, options, and configurations across abstraction hierarchy.
 
-PyChoice provides a systematic way to customize function behavior through rules without 
-modifying the original functions or breaking abstraction boundaries. It allows for 
+PyChoice provides a systematic way to customize function behavior through rules without
+modifying the original functions or breaking abstraction boundaries. It allows for
 complex configuration management and code injection patterns.
 
 Basic usage:
     ```python
     import pychoice as choice
-    
+
     @choice.func(args=["greeting"])
     def greet(name: str, greeting="Hello"):
         return f"{greeting} {name}"
-    
+
     choice.rule([my_app, greet], greet, greeting="Hi")
     ```
 """
@@ -23,10 +23,10 @@ from .selector import ChoiceContext
 
 def trace_start() -> None:
     """Start tracing choice function calls.
-    
+
     Begins recording all choice function invocations and rule applications.
     Use this to debug and understand which choices are being made in your application.
-    
+
     Example:
         ```python
         choice.trace_start()
@@ -40,11 +40,11 @@ def trace_start() -> None:
 
 def trace_stop() -> Trace:
     """Stop tracing and return the collected trace data.
-    
+
     Returns:
         Trace: A trace object containing all choice function calls and decisions
                made since trace_start() was called.
-               
+
     Example:
         ```python
         choice.trace_start()
